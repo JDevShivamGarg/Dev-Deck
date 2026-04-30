@@ -1,0 +1,108 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "In Kafka, what is a partition?",
+    "options": [
+      "A backup copy of a topic",
+      "An ordered, immutable sequence of records within a topic",
+      "A consumer group division",
+      "A broker's disk allocation"
+    ],
+    "answer": "An ordered, immutable sequence of records within a topic",
+    "explanation": "Topics are split into partitions for parallelism. Each partition is an ordered log. Records within a partition have a sequential offset.",
+    "tags": ["partitions", "basics"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What guarantees does Kafka provide for message ordering?",
+    "options": [
+      "Global ordering across all partitions",
+      "Ordering within a partition only",
+      "Ordering within a consumer group",
+      "No ordering guarantees"
+    ],
+    "answer": "Ordering within a partition only",
+    "explanation": "Messages with the same key go to the same partition (via hash). Ordering is only guaranteed within a single partition, not across partitions.",
+    "tags": ["ordering", "guarantees"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 4,
+    "question": "What is the ISR (In-Sync Replicas) in Kafka?",
+    "options": [
+      "All brokers in the cluster",
+      "Replicas that are caught up to the leader within replica.lag.time.max.ms",
+      "The minimum number of replicas needed for a write",
+      "Read-only replicas for consumer load balancing"
+    ],
+    "answer": "Replicas that are caught up to the leader within replica.lag.time.max.ms",
+    "explanation": "ISR tracks which replicas are in sync. If min.insync.replicas isn't met with acks=all, writes are rejected to prevent data loss.",
+    "tags": ["replication", "ISR", "durability"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 1,
+    "question": "What is a Kafka consumer group?",
+    "answer": "A group of consumers that cooperatively consume from a topic. Each partition is assigned to exactly one consumer in the group. This enables parallel consumption with at-most-once-per-partition semantics within the group.",
+    "explanation": "If consumers > partitions, some consumers will be idle. If partitions > consumers, some consumers handle multiple partitions.",
+    "tags": ["consumer-groups", "basics"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "Explain the difference between acks=0, acks=1, and acks=all.",
+    "answer": "acks=0: fire-and-forget, no confirmation. acks=1: leader acknowledges write. acks=all: all ISR replicas must acknowledge. Trade-off is throughput vs. durability.",
+    "explanation": "acks=all + min.insync.replicas=2 is the standard production configuration for critical data.",
+    "tags": ["producers", "durability", "config"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "What is Kafka's log compaction and when would you use it?",
+    "answer": "Log compaction retains only the latest value for each key, deleting older records with the same key. Used for changelog/CDC streams where you need the latest state, not full history (e.g., user profile updates).",
+    "explanation": "Compacted topics act like a KV store backed by a log. Tombstone records (null value) eventually delete the key entirely.",
+    "tags": ["compaction", "retention"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "code_snippet": "props.put(\"enable.auto.commit\", \"true\");\nprops.put(\"auto.commit.interval.ms\", \"5000\");\n// Consumer processes message\n// Consumer crashes before next auto-commit",
+    "question": "What happens to the messages that were processed but not committed when the consumer restarts?",
+    "answer": "They will be reprocessed (at-least-once delivery). Auto-commit only saves offsets periodically, so messages processed between commits will be re-delivered on restart.",
+    "explanation": "For exactly-once semantics, use manual offset commits after processing or Kafka transactions.",
+    "tags": ["offset", "at-least-once", "reliability"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 5,
+    "code_snippet": "# Topic: events, Partitions: 6\n# Consumer Group A: 3 consumers\n# Consumer Group B: 8 consumers",
+    "question": "How many partitions does each consumer handle in Group A and Group B?",
+    "answer": "Group A: 2 partitions per consumer (6/3). Group B: 6 consumers get 1 partition each, 2 consumers are idle (can't exceed partition count). Each group independently consumes all partitions.",
+    "explanation": "Max parallelism = number of partitions. Extra consumers beyond partition count sit idle. Groups are independent — each group sees all messages.",
+    "tags": ["consumer-groups", "partitions", "scaling"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 5,
+    "question": "What is the purpose of Kafka's __consumer_offsets topic?",
+    "options": [
+      "Stores message schemas",
+      "Tracks committed consumer offsets for each group/partition",
+      "Stores broker metadata",
+      "Handles consumer authentication"
+    ],
+    "answer": "Tracks committed consumer offsets for each group/partition",
+    "explanation": "__consumer_offsets is an internal compacted topic. Each key is (group, topic, partition) and the value is the committed offset.",
+    "tags": ["internals", "offsets"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 2,
+    "question": "What is a Kafka broker?",
+    "answer": "A broker is a single Kafka server that stores data and serves client requests. A Kafka cluster consists of multiple brokers for fault tolerance. Each broker is identified by a unique ID and can be leader for some partitions and follower for others.",
+    "explanation": "Brokers handle produce/fetch requests, manage partition leadership, and replicate data to followers.",
+    "tags": ["brokers", "basics"]
+  }
+]

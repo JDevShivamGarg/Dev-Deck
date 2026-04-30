@@ -1,0 +1,125 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "What does `git rebase -i HEAD~3` allow you to do?",
+    "options": [
+      "Merge last 3 commits into main",
+      "Interactively edit, squash, or reorder the last 3 commits",
+      "Reset HEAD to 3 commits ago",
+      "Cherry-pick 3 commits onto current branch"
+    ],
+    "answer": "Interactively edit, squash, or reorder the last 3 commits",
+    "explanation": "-i flag opens an editor with the last N commits listed; you can squash, fixup, reword, or drop each.",
+    "tags": ["rebase", "history"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 1,
+    "question": "Which command stages all modified and new files for commit?",
+    "options": ["git commit -a", "git add .", "git stage --all", "git push --all"],
+    "answer": "git add .",
+    "explanation": "git add . stages all changes in the current directory and subdirectories, including new untracked files.",
+    "tags": ["staging", "basics"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What happens when you run `git reset --soft HEAD~1`?",
+    "options": [
+      "Deletes the last commit and all its changes",
+      "Moves HEAD back one commit, keeping changes staged",
+      "Moves HEAD back one commit, unstaging all changes",
+      "Creates a new commit that reverts the last one"
+    ],
+    "answer": "Moves HEAD back one commit, keeping changes staged",
+    "explanation": "--soft keeps changes in the staging area, --mixed (default) unstages them, --hard discards them entirely.",
+    "tags": ["reset", "undo"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 4,
+    "question": "In a git reflog, what does `HEAD@{2}` refer to?",
+    "options": [
+      "The commit 2 parents before HEAD",
+      "The position HEAD was at 2 moves ago",
+      "The second branch created",
+      "The second stash entry"
+    ],
+    "answer": "The position HEAD was at 2 moves ago",
+    "explanation": "Reflog entries track HEAD movements. HEAD@{n} refers to where HEAD was n movements ago, not ancestry.",
+    "tags": ["reflog", "recovery"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 1,
+    "question": "What is the difference between `git fetch` and `git pull`?",
+    "answer": "git fetch downloads remote changes without merging. git pull = git fetch + git merge. Fetch is safer for reviewing changes before integrating.",
+    "explanation": "Fetch updates remote-tracking branches only; pull automatically merges into your current branch.",
+    "tags": ["remote", "basics"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 2,
+    "question": "How do you undo the last commit but keep changes in the working directory?",
+    "answer": "git reset --mixed HEAD~1 (or just git reset HEAD~1). Changes remain in working directory but are unstaged.",
+    "explanation": "--mixed is the default mode for git reset. It moves HEAD and resets the index but leaves the working tree intact.",
+    "tags": ["reset", "undo"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "What does `git cherry-pick` do and when would you use it?",
+    "answer": "Applies the changes from a specific commit onto the current branch. Used to selectively port fixes/features across branches without merging the entire branch.",
+    "explanation": "Creates a new commit with the same changes but a different hash. Useful for hotfixes that need to go to multiple branches.",
+    "tags": ["cherry-pick", "branching"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "Explain git's three-tree architecture.",
+    "answer": "Working Directory (actual files), Staging Area/Index (next commit snapshot), HEAD (last commit snapshot). git add moves from WD→Index, git commit moves from Index→HEAD.",
+    "explanation": "Understanding this model is key to mastering reset, checkout, and stash operations.",
+    "tags": ["internals", "architecture"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "code_snippet": "git checkout feature\ngit rebase main\ngit checkout main\ngit merge feature",
+    "question": "What is the state of the main branch after this sequence, and why is no merge commit created?",
+    "answer": "main fast-forwards to feature's tip. Since feature's history is linear on top of main (post-rebase), Git performs a fast-forward merge — no divergent history, no merge commit needed.",
+    "explanation": "Rebase replants feature commits onto main's HEAD, making the path linear. Fast-forward is then possible.",
+    "tags": ["rebase", "merge", "fast-forward"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 4,
+    "code_snippet": "git stash\ngit checkout -b hotfix\n# ... make changes ...\ngit commit -am 'fix'\ngit checkout main\ngit merge hotfix\ngit branch -d hotfix\ngit stash pop",
+    "question": "What is the purpose of this workflow and what risk exists with `git stash pop`?",
+    "answer": "This saves WIP changes, creates a hotfix branch, applies it, then restores WIP. Risk: stash pop can cause merge conflicts if the hotfix touched the same files as the stashed changes.",
+    "explanation": "stash pop applies and drops the stash. If conflicts occur, the stash is NOT dropped — use `git stash drop` after manual resolution.",
+    "tags": ["stash", "workflow", "hotfix"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 5,
+    "question": "What does `git bisect` do?",
+    "options": [
+      "Splits a large commit into smaller ones",
+      "Binary search through commits to find which one introduced a bug",
+      "Divides a branch into two separate branches",
+      "Compares two commits side by side"
+    ],
+    "answer": "Binary search through commits to find which one introduced a bug",
+    "explanation": "git bisect uses binary search across commit history. You mark commits as good/bad and it narrows down the offending commit in O(log n) steps.",
+    "tags": ["debugging", "bisect"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 5,
+    "question": "What is a git worktree and when is it useful?",
+    "answer": "git worktree add creates additional working directories linked to the same repo. Useful for working on multiple branches simultaneously without stashing or switching. Each worktree has its own HEAD and index.",
+    "explanation": "Avoids context-switching overhead. You can have main in one directory and a feature branch in another, both referencing the same .git.",
+    "tags": ["worktree", "advanced"]
+  }
+]

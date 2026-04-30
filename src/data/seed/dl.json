@@ -1,0 +1,55 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "What is the vanishing gradient problem?",
+    "options": [
+      "Gradients become too large during training",
+      "Gradients shrink to near-zero in deep networks, stalling learning",
+      "The loss function becomes non-differentiable",
+      "The learning rate is set too high"
+    ],
+    "answer": "Gradients shrink to near-zero in deep networks, stalling learning",
+    "explanation": "Sigmoid/tanh saturate, causing tiny gradients. ReLU and skip connections (ResNets) mitigate this.",
+    "tags": ["training", "gradients"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "What is batch normalization and why does it help?",
+    "answer": "Normalizes layer inputs to zero mean, unit variance during training. Reduces internal covariate shift, allows higher learning rates, acts as mild regularization.",
+    "explanation": "Applied before or after activation. Uses batch statistics during training, running statistics during inference.",
+    "tags": ["normalization", "training"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "Explain the attention mechanism in transformers.",
+    "answer": "Attention computes weighted sums of Values using compatibility scores between Queries and Keys: Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) * V. Allows each position to attend to all other positions.",
+    "explanation": "Multi-head attention runs this in parallel with different learned projections, capturing different relationship types.",
+    "tags": ["transformers", "attention"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 4,
+    "code_snippet": "model = Sequential([\n  Dense(256, activation='relu'),\n  Dense(256, activation='relu'),\n  Dense(256, activation='relu'),\n  Dense(10, activation='softmax')\n])\n# Training accuracy: 99.8%\n# Validation accuracy: 62.3%",
+    "question": "What problem does this exhibit and how would you fix it?",
+    "answer": "Severe overfitting (huge train-val gap). Fixes: add Dropout layers, use L2 regularization, reduce model capacity, add data augmentation, or use early stopping.",
+    "explanation": "The model memorizes training data. Regularization techniques constrain capacity to improve generalization.",
+    "tags": ["overfitting", "regularization"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 5,
+    "question": "What is the key innovation in ResNets?",
+    "options": [
+      "Using max pooling instead of average pooling",
+      "Skip connections that add input to output of a layer block",
+      "Using 1x1 convolutions for dimensionality reduction",
+      "Training with a cosine learning rate schedule"
+    ],
+    "answer": "Skip connections that add input to output of a layer block",
+    "explanation": "Skip connections allow gradients to flow directly through the network, enabling training of very deep networks (100+ layers).",
+    "tags": ["architectures", "resnet"]
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "Which command displays the current directory's absolute path?",
+    "answer": "pwd",
+    "options": ["pwd", "cd", "ls -l", "whoami"],
+    "explanation": "The `pwd` (print working directory) command outputs the full absolute path of the current directory.",
+    "tags": ["navigation", "basics"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What does `chmod 755 script.sh` do?",
+    "answer": "Owner can read/write/execute; group and others can read/execute",
+    "options": [
+      "Owner can read/write/execute; group and others can read/execute",
+      "Everyone gets full access",
+      "Only owner can execute",
+      "Removes all permissions"
+    ],
+    "explanation": "7=rwx for owner, 5=r-x for group, 5=r-x for others.",
+    "tags": ["permissions", "chmod"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 2,
+    "question": "What is the difference between a hard link and a symbolic link in Linux?",
+    "answer": "A hard link points directly to the inode (data) on disk; deleting the original file doesn't affect it. A symbolic (soft) link is a pointer to the file path; if the target is deleted, the symlink becomes a dangling reference.",
+    "tags": ["filesystem", "links"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "What does the `/proc` filesystem contain?",
+    "answer": "/proc is a virtual filesystem that provides an interface to kernel data structures. It contains information about running processes (each process has a directory named by its PID), system memory, CPU info, mounted devices, and kernel parameters.",
+    "tags": ["filesystem", "kernel"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "question": "A developer reports that a cron job scheduled as `*/5 * * * * /usr/local/bin/backup.sh` is not running. The script works fine when executed manually. What is the most likely cause?",
+    "answer": "The cron environment does not inherit the user's PATH. The script likely depends on commands that are not found in cron's minimal PATH.",
+    "code_snippet": "# crontab -l\n*/5 * * * * /usr/local/bin/backup.sh\n\n# Manual execution works:\n$ /usr/local/bin/backup.sh\nBackup complete.",
+    "explanation": "Cron uses a minimal environment (typically PATH=/usr/bin:/bin). If backup.sh calls commands from /usr/local/bin or other directories, those won't be found. Fix by adding PATH= at the top of the crontab or using absolute paths inside the script.",
+    "tags": ["cron", "debugging", "environment"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 4,
+    "question": "Which signal cannot be caught, blocked, or ignored by a process?",
+    "answer": "SIGKILL (9)",
+    "options": ["SIGTERM (15)", "SIGKILL (9)", "SIGHUP (1)", "SIGINT (2)"],
+    "explanation": "SIGKILL and SIGSTOP cannot be caught or ignored. SIGKILL immediately terminates the process at the kernel level.",
+    "tags": ["signals", "process-management"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "Explain the difference between /dev/null, /dev/zero, and /dev/urandom.",
+    "answer": "/dev/null discards all data written to it and reads as EOF. /dev/zero produces an infinite stream of null bytes (0x00). /dev/urandom provides cryptographically secure pseudorandom bytes from the kernel's entropy pool.",
+    "tags": ["devices", "special-files"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 4,
+    "question": "A server is running out of disk space but `du -sh /*` shows only 10GB used on a 50GB partition. What could explain the discrepancy?",
+    "answer": "Deleted files that are still held open by running processes. The inodes are not freed until the process closes the file descriptor.",
+    "code_snippet": "$ df -h /\nFilesystem  Size  Used  Avail  Use%\n/dev/sda1   50G   48G    2G   96%\n\n$ du -sh /*\n10G total",
+    "explanation": "Use `lsof +L1` to find deleted files still held open. Restarting the offending process or using `truncate` on the /proc/PID/fd/FD entry will reclaim the space.",
+    "tags": ["disk", "debugging", "lsof"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "Which command finds all .log files modified in the last 24 hours?",
+    "answer": "find / -name '*.log' -mtime -1",
+    "options": [
+      "find / -name '*.log' -mtime -1",
+      "grep -r '*.log' /",
+      "locate *.log --recent",
+      "ls -R / | grep .log"
+    ],
+    "explanation": "The `find` command with `-mtime -1` matches files modified within the last day (less than 1 day ago).",
+    "tags": ["find", "file-search"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What does the `nice` value of a process control?",
+    "answer": "CPU scheduling priority — lower nice values mean higher priority",
+    "options": [
+      "CPU scheduling priority — lower nice values mean higher priority",
+      "Memory allocation limit",
+      "Network bandwidth throttling",
+      "Disk I/O priority"
+    ],
+    "explanation": "Nice values range from -20 (highest priority) to 19 (lowest priority). The default is 0. Only root can set negative nice values.",
+    "tags": ["scheduling", "process-management"]
+  }
+]

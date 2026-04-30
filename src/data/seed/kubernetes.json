@@ -1,0 +1,108 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "What is a Pod in Kubernetes?",
+    "options": [
+      "A virtual machine running containers",
+      "The smallest deployable unit, wrapping one or more containers",
+      "A network namespace for services",
+      "A storage volume attached to a node"
+    ],
+    "answer": "The smallest deployable unit, wrapping one or more containers",
+    "explanation": "A Pod is the atomic unit of scheduling. Containers in a Pod share network namespace (localhost) and storage volumes.",
+    "tags": ["pods", "basics"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What is the difference between a Deployment and a StatefulSet?",
+    "options": [
+      "Deployments manage stateless apps; StatefulSets manage stateful apps with stable identities",
+      "Deployments use hostNetwork; StatefulSets use ClusterIP",
+      "Deployments can only run one replica; StatefulSets support multiple",
+      "There is no difference; they are aliases"
+    ],
+    "answer": "Deployments manage stateless apps; StatefulSets manage stateful apps with stable identities",
+    "explanation": "StatefulSets guarantee ordered deployment, stable network IDs (pod-0, pod-1), and persistent volume claims per pod.",
+    "tags": ["deployment", "statefulset"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 4,
+    "question": "Which resource defines network access rules between pods?",
+    "options": [
+      "Ingress",
+      "Service",
+      "NetworkPolicy",
+      "ConfigMap"
+    ],
+    "answer": "NetworkPolicy",
+    "explanation": "NetworkPolicy uses label selectors to define ingress/egress rules between pods. Requires a CNI plugin that supports it (e.g., Calico).",
+    "tags": ["networking", "security"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 1,
+    "question": "What does `kubectl get pods -A` do?",
+    "answer": "Lists pods across ALL namespaces. Without -A (or --all-namespaces), it only shows pods in the current namespace.",
+    "explanation": "The -A flag is shorthand for --all-namespaces, essential for cluster-wide visibility.",
+    "tags": ["kubectl", "basics"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "What are liveness, readiness, and startup probes?",
+    "answer": "Liveness: restarts container if it fails (deadlock detection). Readiness: removes pod from service endpoints if not ready. Startup: delays liveness/readiness checks for slow-starting containers.",
+    "explanation": "Misconfigured probes are a top cause of production issues. Liveness should check if the process is alive, readiness if it can serve traffic.",
+    "tags": ["probes", "health"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "What is a PodDisruptionBudget (PDB)?",
+    "answer": "PDB limits how many pods of a replicaset can be down simultaneously during voluntary disruptions (node drain, cluster upgrades). Specified as minAvailable or maxUnavailable.",
+    "explanation": "Without PDBs, a node drain could take down all replicas of a service simultaneously.",
+    "tags": ["availability", "operations"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "code_snippet": "apiVersion: v1\nkind: Service\nmetadata:\n  name: my-service\nspec:\n  type: ClusterIP\n  selector:\n    app: my-app\n  ports:\n    - port: 80\n      targetPort: 8080",
+    "question": "A pod with label `app: my-app` listens on port 3000. Will this service route traffic to it? Why or why not?",
+    "answer": "No. The service targets port 8080 (targetPort) but the pod listens on 3000. The selector matches but traffic will fail because no process is listening on 8080 in the pod.",
+    "explanation": "targetPort must match the port the container actually listens on. port is the service's virtual port; targetPort is the container's port.",
+    "tags": ["services", "networking", "debugging"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 5,
+    "code_snippet": "apiVersion: apps/v1\nkind: Deployment\nspec:\n  replicas: 3\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxSurge: 1\n      maxUnavailable: 0",
+    "question": "During a rollout, what is the maximum and minimum number of pods running at any time?",
+    "answer": "Max: 4 pods (3 replicas + 1 surge). Min: 3 pods (maxUnavailable=0 means all 3 must remain available). This is the safest rolling update strategy — zero downtime guaranteed.",
+    "explanation": "maxSurge=1 allows 1 extra pod above desired count. maxUnavailable=0 means no pod is terminated until its replacement is Ready.",
+    "tags": ["deployment", "rollout", "strategy"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 5,
+    "question": "What happens when a node becomes NotReady and has pods with a tolerationSeconds of 300 for the node.kubernetes.io/not-ready taint?",
+    "options": [
+      "Pods are evicted immediately",
+      "Pods continue running for 300 seconds before eviction",
+      "Pods are rescheduled to other nodes instantly",
+      "Pods remain indefinitely until manually deleted"
+    ],
+    "answer": "Pods continue running for 300 seconds before eviction",
+    "explanation": "tolerationSeconds defines how long a pod tolerates a taint before the node controller evicts it. Default is 300s for not-ready and unreachable taints.",
+    "tags": ["taints", "tolerations", "scheduling"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 2,
+    "question": "What is a Kubernetes namespace and why use them?",
+    "answer": "Namespaces provide logical isolation within a cluster. They scope resource names, enable resource quotas per team, and allow RBAC policies. Default namespaces: default, kube-system, kube-public, kube-node-lease.",
+    "explanation": "Think of namespaces as virtual sub-clusters. They don't provide network isolation by default — use NetworkPolicies for that.",
+    "tags": ["namespaces", "basics"]
+  }
+]

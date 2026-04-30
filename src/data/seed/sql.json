@@ -1,0 +1,59 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 1,
+    "question": "Which SQL clause is used to filter rows?",
+    "options": ["GROUP BY", "ORDER BY", "WHERE", "HAVING"],
+    "answer": "WHERE",
+    "explanation": "WHERE filters rows before grouping.",
+    "tags": ["basics", "filtering"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What is the difference between WHERE and HAVING?",
+    "options": [
+      "WHERE filters rows; HAVING filters groups",
+      "HAVING filters rows; WHERE filters groups",
+      "They are interchangeable",
+      "WHERE works on JOINs; HAVING works on subqueries"
+    ],
+    "answer": "WHERE filters rows; HAVING filters groups",
+    "explanation": "WHERE is applied before GROUP BY. HAVING is applied after GROUP BY and can use aggregate functions.",
+    "tags": ["aggregation", "filtering"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 2,
+    "question": "What is a SQL index and when should you create one?",
+    "answer": "An index is a B-tree structure that speeds up lookups. Create on columns used in WHERE, JOIN, ORDER BY. Trade-off: faster reads, slower writes.",
+    "explanation": "Without indexes, the DB does a full table scan.",
+    "tags": ["indexes", "performance"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "What are window functions?",
+    "answer": "Functions that calculate across rows related to the current row without collapsing them. Example: ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC).",
+    "explanation": "Common: ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD.",
+    "tags": ["window-functions", "advanced"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "code_snippet": "SELECT d.name, COUNT(e.id)\nFROM departments d\nLEFT JOIN employees e ON e.dept_id = d.id\nGROUP BY d.name\nHAVING COUNT(e.id) > 5;",
+    "question": "Why LEFT JOIN instead of INNER JOIN here?",
+    "answer": "LEFT JOIN keeps departments with 0 employees. Though HAVING > 5 filters them out, it's semantically correct for 'all departments' intent.",
+    "explanation": "LEFT JOIN preserves all rows from the left table.",
+    "tags": ["joins", "aggregation"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 5,
+    "code_snippet": "WITH ranked AS (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC) as rn\n  FROM employees\n)\nSELECT * FROM ranked WHERE rn <= 3;",
+    "question": "What does this query return?",
+    "answer": "Top 3 highest-paid employees per department using the top-N-per-group pattern.",
+    "explanation": "ROW_NUMBER assigns sequential rank within each partition.",
+    "tags": ["CTE", "window-functions"]
+  }
+]

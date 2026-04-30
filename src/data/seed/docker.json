@@ -1,0 +1,55 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 1,
+    "question": "What is the difference between an image and a container in Docker?",
+    "options": [
+      "An image is a running process; a container is the blueprint",
+      "An image is a read-only template; a container is a running instance of it",
+      "They are the same thing",
+      "A container stores data; an image runs code"
+    ],
+    "answer": "An image is a read-only template; a container is a running instance of it",
+    "explanation": "Images are layered, immutable. Containers add a writable layer on top.",
+    "tags": ["basics", "concepts"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "What does the COPY --from=builder syntax in a Dockerfile do?",
+    "options": [
+      "Copies files from the host machine",
+      "Copies files from a previous build stage (multi-stage build)",
+      "Copies files from a running container",
+      "Copies files from Docker Hub"
+    ],
+    "answer": "Copies files from a previous build stage (multi-stage build)",
+    "explanation": "Multi-stage builds use multiple FROM statements. COPY --from references an earlier stage to keep final image small.",
+    "tags": ["multi-stage", "dockerfile"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 2,
+    "question": "What is the difference between CMD and ENTRYPOINT?",
+    "answer": "ENTRYPOINT defines the executable. CMD provides default arguments. CMD is overridden by docker run args; ENTRYPOINT is not (without --entrypoint). Best practice: ENTRYPOINT for the command, CMD for defaults.",
+    "explanation": "Together: ENTRYPOINT ['python'] CMD ['app.py'] → runs 'python app.py'.",
+    "tags": ["dockerfile", "commands"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "How do Docker networking modes differ?",
+    "answer": "bridge: default, isolated network with NAT. host: shares host network stack. none: no networking. overlay: multi-host networking for Swarm. macvlan: assigns MAC address, appears as physical device.",
+    "explanation": "bridge is standard for development. host has no isolation but no NAT overhead.",
+    "tags": ["networking", "modes"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "code_snippet": "FROM node:18\nWORKDIR /app\nCOPY . .\nRUN npm install\nEXPOSE 3000\nCMD [\"node\", \"server.js\"]",
+    "question": "What is inefficient about this Dockerfile and how would you fix it?",
+    "answer": "COPY . . before npm install means ANY file change invalidates the npm install cache. Fix: COPY package*.json first, run npm install, then COPY the rest. This leverages Docker layer caching.",
+    "explanation": "Docker caches layers. Separating dependency install from code copy means npm install only re-runs when package.json changes.",
+    "tags": ["optimization", "layer-caching"]
+  }
+]

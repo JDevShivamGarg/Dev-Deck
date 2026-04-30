@@ -1,0 +1,98 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "Which CAP theorem trade-off does a system like DynamoDB primarily choose?",
+    "answer": "AP — Availability and Partition Tolerance",
+    "options": [
+      "CA — Consistency and Availability",
+      "CP — Consistency and Partition Tolerance",
+      "AP — Availability and Partition Tolerance",
+      "CAP — all three simultaneously"
+    ],
+    "explanation": "DynamoDB is designed to be always-available and partition-tolerant, using eventual consistency by default. It sacrifices strong consistency to remain available during network partitions.",
+    "tags": ["cap-theorem", "distributed-systems"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "Explain the difference between horizontal and vertical scaling. When would you prefer each?",
+    "answer": "Vertical scaling (scale up) adds more CPU/RAM to a single machine — simpler but has hardware limits. Horizontal scaling (scale out) adds more machines — more complex (needs load balancing, data partitioning) but virtually unlimited. Prefer vertical for stateful workloads with low complexity needs; horizontal for stateless services, high traffic, and fault tolerance.",
+    "tags": ["scaling", "fundamentals"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 4,
+    "question": "In a microservices architecture, what pattern prevents cascading failures when a downstream service is unresponsive?",
+    "answer": "Circuit Breaker",
+    "options": ["Circuit Breaker", "Service Mesh", "API Gateway", "Event Sourcing"],
+    "explanation": "The Circuit Breaker pattern monitors failures and 'opens' the circuit after a threshold, immediately returning errors instead of waiting for timeouts, preventing cascading failures.",
+    "tags": ["resilience", "microservices"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 4,
+    "question": "You're designing a URL shortener service that needs to handle 100M new URLs per month and 10B redirects per month. Which data store would you choose for the URL mappings and why?",
+    "answer": "A key-value store like Redis (for hot data) backed by a NoSQL database like DynamoDB or Cassandra. The access pattern is simple key-value lookup (short_code → original_url), reads vastly outnumber writes (100:1 ratio), and the data is naturally partitionable by short_code hash.",
+    "code_snippet": "# Access pattern:\nWRITE: PUT {short_code} → {original_url, created_at, expiry}\nREAD:  GET {short_code} → {original_url}\n\n# Scale:\n~40 writes/sec (100M/month)\n~4000 reads/sec (10B/month)",
+    "explanation": "Relational databases would struggle at this scale without heavy sharding. The simple key-value access pattern makes NoSQL ideal. Redis acts as a cache layer for the most-accessed URLs.",
+    "tags": ["url-shortener", "key-value", "caching"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "What is the difference between a message queue and an event stream?",
+    "answer": "A message queue (e.g., RabbitMQ, SQS) delivers each message to exactly one consumer and deletes it after acknowledgment — point-to-point. An event stream (e.g., Kafka) persists events in an ordered log that multiple consumers can read independently at their own pace — pub/sub with replay capability.",
+    "tags": ["messaging", "event-driven"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "Which consistency model guarantees that after a write completes, all subsequent reads will return the updated value?",
+    "answer": "Strong (linearizable) consistency",
+    "options": [
+      "Eventual consistency",
+      "Strong (linearizable) consistency",
+      "Causal consistency",
+      "Read-your-writes consistency"
+    ],
+    "explanation": "Strong/linearizable consistency ensures all operations appear to execute atomically in real-time order. This is the strongest guarantee but comes at the cost of latency and availability.",
+    "tags": ["consistency", "distributed-systems"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 5,
+    "question": "Your e-commerce platform processes 50,000 orders per minute during flash sales. The monolithic order service is failing under load. How would you redesign it?",
+    "answer": "Decompose into: (1) Order Ingestion service that accepts and validates orders, writes to a message queue. (2) Order Processor that consumes from the queue and handles inventory, payment, and fulfillment as separate services. (3) Use CQRS — separate read/write models so product listing reads don't compete with order writes. (4) Add rate limiting and queue-based load leveling to absorb spikes.",
+    "explanation": "The key insight is using asynchronous processing via message queues to decouple the burst of incoming requests from the actual processing. The user gets an immediate 'order received' response while processing happens asynchronously.",
+    "tags": ["e-commerce", "cqrs", "event-driven", "decomposition"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "What is consistent hashing and why is it important for distributed caches?",
+    "answer": "Consistent hashing maps both keys and nodes to a ring (hash space). Each key is assigned to the next node clockwise on the ring. When a node is added/removed, only ~1/n of the keys need to be remapped (vs. all keys with modulo hashing). This minimizes cache invalidation during scaling events.",
+    "tags": ["consistent-hashing", "caching", "distributed-systems"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "What is the primary purpose of a load balancer?",
+    "answer": "Distribute incoming traffic across multiple servers to prevent overload",
+    "options": [
+      "Distribute incoming traffic across multiple servers to prevent overload",
+      "Encrypt data in transit",
+      "Store session data between requests",
+      "Monitor application health logs"
+    ],
+    "explanation": "A load balancer sits in front of a server group and routes client requests across all capable servers to maximize throughput, minimize response time, and avoid overloading any single server.",
+    "tags": ["load-balancer", "fundamentals"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "Explain the write-ahead log (WAL) pattern and where it's used.",
+    "answer": "WAL is a durability pattern where every state change is first appended to a sequential log on disk before being applied to the main data structure. If the system crashes mid-update, it can recover by replaying the log. Used in: databases (PostgreSQL, SQLite), distributed consensus (Raft), message brokers (Kafka), and filesystems (ext4 journal).",
+    "tags": ["wal", "durability", "databases"]
+  }
+]

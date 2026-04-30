@@ -1,0 +1,63 @@
+[
+  {
+    "mode": "mcq",
+    "difficulty": 2,
+    "question": "What is the bias-variance tradeoff?",
+    "options": [
+      "Choosing between speed and accuracy",
+      "Balancing underfitting (bias) vs overfitting (variance)",
+      "Trading training time for model size",
+      "Choosing between precision and recall"
+    ],
+    "answer": "Balancing underfitting (bias) vs overfitting (variance)",
+    "explanation": "High bias = model too simple, misses patterns. High variance = model memorizes noise.",
+    "tags": ["fundamentals", "theory"]
+  },
+  {
+    "mode": "mcq",
+    "difficulty": 3,
+    "question": "When should you use L1 (Lasso) vs L2 (Ridge) regularization?",
+    "options": [
+      "L1 for feature selection; L2 when all features are useful",
+      "L2 for feature selection; L1 when all features are useful",
+      "Always use L2; L1 is deprecated",
+      "L1 for regression; L2 for classification"
+    ],
+    "answer": "L1 for feature selection; L2 when all features are useful",
+    "explanation": "L1 drives coefficients to exactly zero (sparse). L2 shrinks all coefficients toward zero but keeps them.",
+    "tags": ["regularization", "feature-selection"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 1,
+    "question": "What is cross-validation and why use it?",
+    "answer": "Splitting data into K folds, training on K-1 and validating on 1, rotating K times. Gives a more reliable estimate of model performance than a single train/test split.",
+    "explanation": "Reduces variance in performance estimate. Standard K is 5 or 10.",
+    "tags": ["evaluation", "basics"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 3,
+    "question": "Explain precision vs recall vs F1 score.",
+    "answer": "Precision = TP/(TP+FP) — of predicted positives, how many are correct. Recall = TP/(TP+FN) — of actual positives, how many were found. F1 = harmonic mean of both.",
+    "explanation": "Use precision when false positives are costly (spam detection). Recall when false negatives are costly (cancer screening).",
+    "tags": ["metrics", "classification"]
+  },
+  {
+    "mode": "flashcard",
+    "difficulty": 4,
+    "question": "What is gradient boosting and how does it differ from bagging?",
+    "answer": "Gradient boosting builds trees sequentially, each correcting errors of the previous. Bagging (Random Forest) builds trees independently and averages. Boosting reduces bias; bagging reduces variance.",
+    "explanation": "XGBoost, LightGBM are gradient boosting. Random Forest is bagging.",
+    "tags": ["ensemble", "boosting"]
+  },
+  {
+    "mode": "scenario",
+    "difficulty": 3,
+    "code_snippet": "from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.fit_transform(X_test)  # Bug!",
+    "question": "What is the bug in this preprocessing code?",
+    "answer": "X_test should use scaler.transform(X_test), not fit_transform. Fitting on test data causes data leakage — the scaler learns test set statistics.",
+    "explanation": "Always fit on train, transform on test. fit_transform on test = information leak.",
+    "tags": ["preprocessing", "data-leakage"]
+  }
+]
