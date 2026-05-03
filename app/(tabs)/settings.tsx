@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Switch, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getActiveTopics, insertCustomTopic } from '../../src/db/queries/topics';
@@ -51,7 +52,7 @@ export default function SettingsScreen() {
   const customTopics = topics.filter((t) => t.is_builtin === 0);
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       {/* App bar */}
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
@@ -178,7 +179,7 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

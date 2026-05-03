@@ -8,26 +8,20 @@ export async function getProgress(topicId: number): Promise<{
   const db = await getDatabase();
 
   const totalResult = await db.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) as count FROM Card WHERE topic_id = ?`,
-    [topicId]
-  );
+    `SELECT COUNT(*) as count FROM Card WHERE topic_id = ?`, topicId);
 
   const masteredResult = await db.getFirstAsync<{ count: number }>(
     `SELECT COUNT(*) as count
      FROM CardProgress cp
      JOIN Card c ON c.id = cp.card_id
-     WHERE c.topic_id = ? AND cp.retired = 1`,
-    [topicId]
-  );
+     WHERE c.topic_id = ? AND cp.retired = 1`, topicId);
 
   const accuracyResult = await db.getFirstAsync<{ seen: number; correct: number }>(
     `SELECT COALESCE(SUM(cp.times_seen), 0) as seen,
             COALESCE(SUM(cp.times_correct), 0) as correct
      FROM CardProgress cp
      JOIN Card c ON c.id = cp.card_id
-     WHERE c.topic_id = ?`,
-    [topicId]
-  );
+     WHERE c.topic_id = ?`, topicId);
 
   const total = totalResult?.count ?? 0;
   const mastered = masteredResult?.count ?? 0;
@@ -108,16 +102,19 @@ export async function getStreakDays(): Promise<number> {
 
 export async function getTopicAccuracy(topicId: number): Promise<number> {
   const db = await getDatabase();
-  const result = await db.getFirstAsync<{ seen: number; correct: number }>(
-    `SELECT COALESCE(SUM(cp.times_seen), 0) as seen,
-            COALESCE(SUM(cp.times_correct), 0) as correct
-     FROM CardProgress cp
-     JOIN Card c ON c.id = cp.card_id
-     WHERE c.topic_id = ?`,
-    [topicId]
-  );
-  const seen = result?.seen ?? 0;
-  const correct = result?.correct ?? 0;
-  if (seen === 0) return -1; // no data
-  return correct / seen;
+  try {
+    const result = await db.getFirstAsync<{ seen: number; correct: number }>(
+      `SELECT COALESCE(SUM(cp.times_seen), 0) as seen,
+              COALESCE(SUM(cp.times_correct), 0) as correct
+       FROM CardProgress cp
+       JOIN Card c ON c.id = cp.card_id
+       WHERE c.topic_id = ?`, topicId);
+    const seen = result?.seen ?? 0;
+    const correct = result?.correct ?? 0;
+    if (seen === 0) return -1; // no data
+    return correct / seen;
+  } catch (error) {
+    console.error('Database Error in getTopicAccuracy:', error);
+    throw error;
+  }
 }

@@ -3,6 +3,7 @@ import type { CardWithProgress, CardMode, Proficiency } from '../types';
 
 interface SessionState {
   // Session config
+  sessionId: string | null;
   topicId: number | null;
   topicName: string;
   mode: CardMode | null;
@@ -26,6 +27,7 @@ interface SessionState {
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
+  sessionId: null,
   topicId: null,
   topicName: '',
   mode: null,
@@ -37,7 +39,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   answers: [],
 
   setSessionConfig: (topicId, topicName, mode, proficiency) =>
-    set({ topicId, topicName, mode, proficiency, startedAt: Date.now() }),
+    set({ 
+      sessionId: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+      topicId, 
+      topicName, 
+      mode, 
+      proficiency, 
+      startedAt: Date.now() 
+    }),
 
   setQueue: (cards) =>
     set({ queue: cards, currentIndex: 0, score: 0, answers: [] }),
@@ -60,6 +69,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   resetSession: () =>
     set({
+      sessionId: null,
       topicId: null,
       topicName: '',
       mode: null,

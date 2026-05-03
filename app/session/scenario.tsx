@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
 import { ScenarioCard } from '../../src/components/cards/ScenarioCard';
@@ -17,7 +18,7 @@ export default function ScenarioSession() {
   const router = useRouter();
 
   const {
-    loading, error, currentCard, currentIndex, score, totalCards, isComplete, gradeCard, nextCard,
+    loading, error, currentCard, score, totalCards, isComplete, gradeCard, nextCard,
   } = useSession(
     Number(topicId), topicName ?? '', 'scenario', (proficiency as Proficiency) ?? 'intermediate'
   );
@@ -26,6 +27,7 @@ export default function ScenarioSession() {
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
+      const elapsed = store.startedAt ? Math.round((Date.now() - store.startedAt) / 1000) : 0;
       insertSession({
         topic_id: Number(topicId),
         mode: 'scenario',
@@ -35,13 +37,20 @@ export default function ScenarioSession() {
         started_at: store.startedAt ?? Date.now(),
         ended_at: Date.now(),
       }).then(() => {
+        store.resetSession();
         router.replace({
           pathname: '/results',
-          params: { topicName: topicName ?? '', mode: 'scenario', total: totalCards.toString(), correct: score.toString() },
+          params: { 
+            topicName: topicName ?? '', 
+            mode: 'scenario', 
+            total: totalCards.toString(), 
+            correct: score.toString(),
+            elapsed: elapsed.toString()
+          },
         });
       });
     }
-  }, [isComplete]);
+  }, [isComplete, totalCards, topicId, proficiency, score, store.startedAt, topicName, router, store]);
 
   if (loading) {
     return (
@@ -72,9 +81,9 @@ export default function ScenarioSession() {
   if (!currentCard) return null;
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
-    </View>
+    </SafeAreaView>
   );
 }
 

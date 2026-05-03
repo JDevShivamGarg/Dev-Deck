@@ -66,6 +66,7 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <Stack
         screenOptions={{
+          headerShown: false,
           headerStyle: { backgroundColor: colors.dark },
           headerTintColor: colors.neon,
           headerTitleStyle: {
@@ -77,7 +78,14 @@ export default function RootLayout() {
           animation: 'slide_from_right',
           headerShadowVisible: false,
         }}
-      />
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="results" options={{ headerShown: false }} />
+        <Stack.Screen name="session/setup/[topicId]" options={{ headerShown: false }} />
+        <Stack.Screen name="session/mcq" options={{ headerShown: false }} />
+        <Stack.Screen name="session/flashcard" options={{ headerShown: false }} />
+        <Stack.Screen name="session/scenario" options={{ headerShown: false }} />
+      </Stack>
     </View>
   );
 }

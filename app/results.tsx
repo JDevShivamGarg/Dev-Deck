@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSessionStore } from '../src/store/session';
 import { colors } from '../src/theme/colors';
 
 export default function ResultsScreen() {
-  const { topicName, mode, total, correct } = useLocalSearchParams<{
+  const { topicName, mode, total, correct, elapsed: elapsedStr } = useLocalSearchParams<{
     topicName: string;
     mode: string;
     total: string;
     correct: string;
+    elapsed: string;
   }>();
   const router = useRouter();
   const resetSession = useSessionStore((s) => s.resetSession);
@@ -19,8 +21,7 @@ export default function ResultsScreen() {
   const correctNum = Number(correct) || 0;
   const incorrect = totalNum - correctNum;
   const accuracy = totalNum > 0 ? Math.round((correctNum / totalNum) * 100) : 0;
-  const startedAt = useSessionStore((s) => s.startedAt);
-  const elapsed = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
+  const elapsed = Number(elapsedStr) || 0;
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
   const pace = totalNum > 0 ? Math.round(elapsed / totalNum) : 0;
@@ -36,7 +37,7 @@ export default function ResultsScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       {/* App bar */}
       <View style={styles.appBar}>
         <TouchableOpacity style={styles.appBarBtn}>
@@ -130,7 +131,7 @@ export default function ResultsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

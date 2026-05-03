@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCardsDue, getCardsDueCount, insertCard, getCardCountByTopicAndMode, updateCardProgress } from '../db/queries/cards';
+import { getCardsDue, getCardsDueCount, insertCard, updateCardProgress } from '../db/queries/cards';
 import { generateCards } from '../ai/generator';
 import { grade } from '../srs/scheduler';
 import { shuffle } from '../utils/shuffle';
 import { PROFICIENCY_DIFFICULTY_MAP } from '../utils/proficiencyMap';
 import { useSessionStore } from '../store/session';
-import type { CardWithProgress, CardMode, Proficiency } from '../types';
+import type { CardMode, Proficiency } from '../types';
 import Constants from 'expo-constants';
 
 const AI_THRESHOLD = 5;
@@ -18,6 +18,7 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
 
   const loadCards = useCallback(async () => {
     try {
+      store.resetSession();
       setLoading(true);
       setError(null);
 
@@ -37,7 +38,7 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
               await insertCard(topicId, mode, card, 'ai');
             }
           } catch {
-            console.log('AI generation unavailable, using stored cards');
+            __DEV__ && console.log('AI generation unavailable, using stored cards');
           }
         }
       }

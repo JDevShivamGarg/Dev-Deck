@@ -38,16 +38,16 @@ export async function seedAllCards(): Promise<void> {
   );
 
   if (result && result.count > 0) {
-    console.log('Seed data already loaded, skipping...');
+    __DEV__ && console.log('Seed data already loaded, skipping...');
     return;
   }
 
-  console.log('Seeding card data...');
+  __DEV__ && console.log('Seeding card data...');
 
   for (const [slug, cards] of Object.entries(SEED_DATA)) {
     const topic = await getTopicBySlug(slug);
     if (!topic) {
-      console.warn(`Topic ${slug} not found, skipping seed`);
+      __DEV__ && console.warn(`Topic ${slug} not found, skipping seed`);
       continue;
     }
 
@@ -55,8 +55,8 @@ export async function seedAllCards(): Promise<void> {
       await insertCard(topic.id, card.mode, card, 'static');
     }
 
-    console.log(`Seeded ${cards.length} cards for ${slug}`);
+    __DEV__ && console.log(`Seeded ${cards.length} cards for ${slug}`);
   }
 
-  console.log('Seed complete');
+  __DEV__ && console.log('Seed complete');
 }

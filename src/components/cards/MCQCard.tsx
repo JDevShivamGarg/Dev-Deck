@@ -15,7 +15,6 @@ export function MCQCard({ card, onGrade, onNext }: MCQCardProps) {
   const [hasAnswered, setHasAnswered] = useState(false);
 
   const options: string[] = card.options ? JSON.parse(card.options) : [];
-  const isCorrect = selectedOption === card.answer;
   const LETTERS = ['A', 'B', 'C', 'D'];
 
   const handleSelect = (option: string) => {

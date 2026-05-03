@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getActiveTopics } from '../../src/db/queries/topics';
 import { getCardsDueCount, getAllCardsDueCount } from '../../src/db/queries/cards';
 import { TOPIC_ICON_MAP } from '../../src/data/topics';
-import { getOverallProgress } from '../../src/db/queries/progress';
 import { colors } from '../../src/theme/colors';
 import type { Topic } from '../../src/types';
 
@@ -43,7 +43,7 @@ export default function HomeScreen() {
     return TOPIC_ICON_MAP[slug] ?? 'folder-outline';
   };
 
-  const renderTopic = ({ item, index }: { item: TopicWithDue; index: number }) => (
+  const renderTopic = ({ item }: { item: TopicWithDue }) => (
     <TouchableOpacity
       onPress={() => router.push(`/session/setup/${item.id}`)}
       style={styles.topicCard}
@@ -75,7 +75,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       {/* Header bar */}
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
@@ -85,7 +85,7 @@ export default function HomeScreen() {
 
       {/* Summary section */}
       <View style={styles.summarySection}>
-        <View>
+        <View style={{ flex: 1, paddingRight: 16 }}>
           <Text style={styles.dailyDeckTitle}>DAILY DECK</Text>
           <Text style={styles.dailyDeckSub}>{totalDue} Cards due for review today.</Text>
         </View>
@@ -104,7 +104,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.gridContent}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   gridContent: {
-    padding: 4,
+    padding: 8,
     paddingBottom: 80,
   },
   gridRow: {
-    gap: 4,
-    paddingHorizontal: 4,
+    gap: 8,
+    paddingHorizontal: 8,
   },
   topicCard: {
     flex: 1,

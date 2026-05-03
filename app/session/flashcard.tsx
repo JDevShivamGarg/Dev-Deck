@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
 import { FlashCard } from '../../src/components/cards/FlashCard';
@@ -26,6 +27,7 @@ export default function FlashcardSession() {
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
+      const elapsed = store.startedAt ? Math.round((Date.now() - store.startedAt) / 1000) : 0;
       insertSession({
         topic_id: Number(topicId),
         mode: 'flashcard',
@@ -35,13 +37,20 @@ export default function FlashcardSession() {
         started_at: store.startedAt ?? Date.now(),
         ended_at: Date.now(),
       }).then(() => {
+        store.resetSession();
         router.replace({
           pathname: '/results',
-          params: { topicName: topicName ?? '', mode: 'flashcard', total: totalCards.toString(), correct: score.toString() },
+          params: { 
+            topicName: topicName ?? '', 
+            mode: 'flashcard', 
+            total: totalCards.toString(), 
+            correct: score.toString(),
+            elapsed: elapsed.toString()
+          },
         });
       });
     }
-  }, [isComplete]);
+  }, [isComplete, totalCards, topicId, proficiency, score, store.startedAt, topicName, router, store]);
 
   if (loading) {
     return (
@@ -72,13 +81,13 @@ export default function FlashcardSession() {
   if (!currentCard) return null;
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       {/* Progress counter */}
       <View style={styles.counterRow}>
         <Text style={styles.counterText}>[ {currentIndex + 1} / {totalCards} ]</Text>
       </View>
       <FlashCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
-    </View>
+    </SafeAreaView>
   );
 }
 

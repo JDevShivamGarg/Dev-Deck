@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getTopicById } from '../../../src/db/queries/topics';
@@ -55,7 +56,7 @@ export default function SessionSetup() {
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       {/* Header */}
       <View style={styles.appBar}>
         <TouchableOpacity onPress={() => router.back()} style={styles.appBarBtn}>
@@ -160,7 +161,7 @@ export default function SessionSetup() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

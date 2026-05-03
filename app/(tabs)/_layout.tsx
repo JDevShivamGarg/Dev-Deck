@@ -1,15 +1,17 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../src/theme/colors';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { paddingBottom: insets.bottom + 4, height: 64 + insets.bottom }],
         tabBarActiveTintColor: colors.neon,
         tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
         tabBarLabelStyle: styles.tabLabel,
@@ -19,8 +21,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          href: '/',
           title: 'FEED',
-          tabBarIcon: ({ color, size }) => (
+          tabBarLabel: 'FEED',
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="rss" color={color} size={20} />
           ),
         }}
@@ -28,8 +32,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="progress"
         options={{
+          href: '/progress',
           title: 'TRENDS',
-          tabBarIcon: ({ color, size }) => (
+          tabBarLabel: 'TRENDS',
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="lightning-bolt" color={color} size={20} />
           ),
         }}
@@ -37,8 +43,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
+          href: '/settings',
           title: 'PROFILE',
-          tabBarIcon: ({ color, size }) => (
+          tabBarLabel: 'PROFILE',
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="account-circle" color={color} size={20} />
           ),
         }}
@@ -52,9 +60,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dark,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    height: 64,
     paddingTop: 4,
-    paddingBottom: 4,
     elevation: 0,
     shadowOpacity: 0,
   },

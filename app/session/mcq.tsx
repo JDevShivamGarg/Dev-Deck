@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
 import { MCQCard } from '../../src/components/cards/MCQCard';
@@ -26,6 +27,7 @@ export default function MCQSession() {
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
+      const elapsed = store.startedAt ? Math.round((Date.now() - store.startedAt) / 1000) : 0;
       insertSession({
         topic_id: Number(topicId),
         mode: 'mcq',
@@ -35,13 +37,20 @@ export default function MCQSession() {
         started_at: store.startedAt ?? Date.now(),
         ended_at: Date.now(),
       }).then(() => {
+        store.resetSession();
         router.replace({
           pathname: '/results',
-          params: { topicName: topicName ?? '', mode: 'mcq', total: totalCards.toString(), correct: score.toString() },
+          params: { 
+            topicName: topicName ?? '', 
+            mode: 'mcq', 
+            total: totalCards.toString(), 
+            correct: score.toString(),
+            elapsed: elapsed.toString()
+          },
         });
       });
     }
-  }, [isComplete]);
+  }, [isComplete, totalCards, topicId, proficiency, score, store.startedAt, topicName, router, store]);
 
   if (loading) {
     return (
@@ -72,7 +81,7 @@ export default function MCQSession() {
   if (!currentCard) return null;
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       {/* Progress */}
       <View style={styles.progressRow}>
         <Text style={styles.progressLabel}>Q.{String(currentIndex + 1).padStart(2, '0')}</Text>
@@ -82,7 +91,7 @@ export default function MCQSession() {
         <Text style={styles.progressLabel}>{totalCards}</Text>
       </View>
       <MCQCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
-    </View>
+    </SafeAreaView>
   );
 }
 

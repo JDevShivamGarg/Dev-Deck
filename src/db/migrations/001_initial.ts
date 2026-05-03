@@ -12,8 +12,6 @@ export async function runMigrations(): Promise<void> {
   for (const topic of BUILTIN_TOPICS) {
     await db.runAsync(
       `INSERT OR IGNORE INTO Topic (slug, display_name, icon, source, created_at)
-       VALUES (?, ?, ?, 'builtin', ?)`,
-      [topic.slug, topic.display, topic.icon, Date.now()]
-    );
+       VALUES (?, ?, ?, 'builtin', ?)`, topic.slug, topic.display, topic.icon, Date.now());
   }
 }
