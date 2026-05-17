@@ -25,6 +25,18 @@
       "expo-router",
       "expo-sqlite",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e0d7582a-cbbe-4e98-9175-8c1a561233f6"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.devdeck.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }
