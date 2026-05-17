@@ -10,10 +10,21 @@ Generate study content from the material above. Return only valid JSON, no expla
 
 {
   "topic": "...",
-  "mcqs": [{"question": "","options": ["A","B","C","D"],"answer": "A"}],
+  "mcqs": [
+    {
+      "question": "Deep technical question here",
+      "options": ["Plausible wrong answer 1", "Plausible wrong answer 2", "Correct answer", "Plausible wrong answer 3"],
+      "answer": "Correct answer" // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY. Do not use A/B/C/D.
+    }
+  ],
   "flashcards": [{"front": "","back": ""}],
   "qa": [{"question": "","answer": ""}]
 }
+
+CRITICAL RULES:
+1. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
+2. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
+3. Randomize the position of the correct answer across different questions.
 
 Count: 10 MCQs, 10 flashcards, 10 Q&A.`;
 }
@@ -39,10 +50,21 @@ ${existingList}
 Generate additional questions covering different concepts or angles not addressed above. Return only valid JSON, no explanation:
 
 {
-  "mcqs": [{"question": "","options": ["A","B","C","D"],"answer": "A"}],
+  "mcqs": [
+    {
+      "question": "Deep technical question here",
+      "options": ["Plausible wrong answer 1", "Plausible wrong answer 2", "Correct answer", "Plausible wrong answer 3"],
+      "answer": "Correct answer" // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY. Do not use A/B/C/D.
+    }
+  ],
   "flashcards": [{"front": "","back": ""}],
   "qa": [{"question": "","answer": ""}]
 }
+
+CRITICAL RULES:
+1. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
+2. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
+3. Randomize the position of the correct answer across different questions.
 
 Count: 5 MCQs, 5 flashcards, 5 Q&A.`;
 }

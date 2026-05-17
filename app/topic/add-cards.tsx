@@ -208,7 +208,7 @@ export default function AddCardsScreen() {
         <Text style={[styles.subLabel, { marginTop: 8 }]}>2. Paste the raw JSON response below.</Text>
         <TextInput
           style={[styles.input, styles.textArea, { height: 120 }]}
-          placeholder={`{\n  "mcqs": [...]\n}`}
+          placeholder={`{\n  "mcqs": [\n    {\n      "question": "...",\n      "options": ["A", "B", "C", "D"],\n      "answer": "A"\n    }\n  ],\n  "flashcards": [...],\n  "qa": [...]\n}`}
           placeholderTextColor={colors.onSurfaceVariant}
           value={manualJson}
           onChangeText={setManualJson}
