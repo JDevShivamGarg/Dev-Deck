@@ -1,5 +1,7 @@
 # DevDeck 🚀
 
+[![Download APK](https://img.shields.io/badge/Download-Android_APK-C3F400?style=for-the-badge&logo=android&logoColor=050505&labelColor=111111)](https://expo.dev/accounts/depresseddeveloper/projects/devdeck/builds/9abb1cb2-2e55-459)
+
 ![DevDeck Demo Preview](https://img.shields.io/badge/Status-Active-brightgreen.svg)
 ![Expo](https://img.shields.io/badge/Expo-54.0-black.svg?style=flat&logo=expo)
 ![React Native](https://img.shields.io/badge/React_Native-0.81-blue.svg?style=flat&logo=react)
