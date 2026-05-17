@@ -1,19 +1,31 @@
-import { buildPrompt } from './prompts';
-import type { RawCard, CardMode, Proficiency } from '../types';
+import { buildNewTopicPrompt, buildExistingTopicPrompt } from './prompts';
+import type { RawCard } from '../types';
 
-export async function generateCards(
-  topic: string,
-  mode: CardMode,
-  proficiency: Proficiency,
-  count: number,
-  apiKey: string,
-  isCustomTopic: boolean = false
-): Promise<RawCard[]> {
-  const prompt = buildPrompt(topic, mode, proficiency, count);
+export interface BatchGenerationResult {
+  topic?: string;
+  cards: (RawCard & { _mappedMode: string })[];
+}
 
-  const systemMessage = isCustomTopic
-    ? `Topic "${topic}" is user-defined. Generate practical, real-world questions relevant to this technology. If the topic is ambiguous or non-technical, return an empty JSON array []. Return only a JSON array. No markdown, no preamble.`
-    : 'Return only a JSON array. No markdown, no preamble.';
+export async function generateNewTopic(
+  topicName: string,
+  material: string,
+  apiKey: string
+): Promise<BatchGenerationResult> {
+  const prompt = buildNewTopicPrompt(topicName, material);
+  return await executeBatchGeneration(prompt, apiKey);
+}
+
+export async function generateAdditionalCards(
+  topicName: string,
+  existingQuestions: string[],
+  apiKey: string
+): Promise<BatchGenerationResult> {
+  const prompt = buildExistingTopicPrompt(topicName, existingQuestions);
+  return await executeBatchGeneration(prompt, apiKey);
+}
+
+async function executeBatchGeneration(prompt: string, apiKey: string): Promise<BatchGenerationResult> {
+  const systemMessage = 'Return only a valid JSON object. No markdown, no preamble. Follow the requested structure exactly.';
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -44,25 +56,77 @@ export async function generateCards(
       throw new Error('Empty response from Groq API');
     }
 
-    // Extract JSON array from response (handle potential markdown wrapping)
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    return parseGeneratedCardsJSON(content);
+  } catch (error) {
+    console.error('AI batch generation failed:', error);
+    return { cards: [] };
+  }
+}
+
+export function parseGeneratedCardsJSON(content: string): BatchGenerationResult {
+  try {
+    // Extract JSON object from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return [];
+      throw new Error('No JSON object found in response');
     }
 
-    const parsed: RawCard[] = JSON.parse(jsonMatch[0]);
+    const parsed = JSON.parse(jsonMatch[0]);
+    const cards: (RawCard & { _mappedMode: string })[] = [];
 
-    // Validate structure
-    return parsed.filter(
-      (card) =>
-        typeof card.question === 'string' &&
-        typeof card.answer === 'string' &&
-        typeof card.difficulty === 'number' &&
-        card.difficulty >= 1 &&
-        card.difficulty <= 5
-    );
+    // Parse MCQs
+    if (Array.isArray(parsed.mcqs)) {
+      parsed.mcqs.forEach((mcq: any) => {
+        if (mcq.question && mcq.options && mcq.answer) {
+          cards.push({
+            question: mcq.question,
+            options: mcq.options,
+            answer: mcq.answer,
+            difficulty: 3, // Defaulting as prompt doesn't specify difficulty
+            explanation: 'Generated from material', // Fallback
+            _mappedMode: 'mcq'
+          } as RawCard & { _mappedMode: string });
+        }
+      });
+    }
+
+    // Parse Flashcards
+    if (Array.isArray(parsed.flashcards)) {
+      parsed.flashcards.forEach((fc: any) => {
+        if (fc.front && fc.back) {
+          cards.push({
+            question: fc.front,
+            answer: fc.back,
+            difficulty: 3,
+            explanation: 'Generated from material',
+            _mappedMode: 'flashcard'
+          } as RawCard & { _mappedMode: string });
+        }
+      });
+    }
+
+    // Parse Q&A (Mapping to scenario)
+    if (Array.isArray(parsed.qa)) {
+      parsed.qa.forEach((qa: any) => {
+        if (qa.question && qa.answer) {
+          cards.push({
+            question: qa.question,
+            answer: qa.answer,
+            code_snippet: '', // Keep empty or generate if needed
+            difficulty: 3,
+            explanation: qa.answer, // Use answer as explanation too
+            _mappedMode: 'scenario'
+          } as RawCard & { _mappedMode: string });
+        }
+      });
+    }
+
+    return {
+      topic: parsed.topic,
+      cards
+    };
   } catch (error) {
-    console.error('AI card generation failed:', error);
-    return [];
+    console.error('JSON Parsing failed:', error);
+    throw new Error('Failed to parse AI generated cards.');
   }
 }

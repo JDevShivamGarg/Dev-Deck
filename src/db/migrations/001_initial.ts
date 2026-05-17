@@ -8,6 +8,13 @@ export async function runMigrations(): Promise<void> {
   // Create tables
   await db.execAsync(CREATE_TABLES_SQL);
 
+  // Add material column if it doesn't exist
+  try {
+    await db.execAsync(`ALTER TABLE Topic ADD COLUMN material TEXT;`);
+  } catch (err) {
+    // Column might already exist
+  }
+
   // Seed builtin topics if not present
   for (const topic of BUILTIN_TOPICS) {
     await db.runAsync(

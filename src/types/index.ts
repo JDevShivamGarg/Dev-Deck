@@ -4,7 +4,8 @@ export interface Topic {
   display_name: string;
   icon: string | null;
   source: 'builtin' | 'custom';
-  active: number;
+  material?: string;
+  active: 0 | 1;
   is_builtin: number; // 1 if source='builtin', 0 otherwise
   created_at: number;
 }

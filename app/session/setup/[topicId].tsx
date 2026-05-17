@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getTopicById } from '../../../src/db/queries/topics';
-import { getCardsDueCount } from '../../../src/db/queries/cards';
+import { getCardsDueCount, getExistingQuestionsForTopic, insertCard } from '../../../src/db/queries/cards';
+import { generateAdditionalCards } from '../../../src/ai/generator';
+import Constants from 'expo-constants';
 import { colors } from '../../../src/theme/colors';
 import type { Topic, CardMode, Proficiency } from '../../../src/types';
 
@@ -44,6 +46,14 @@ export default function SessionSetup() {
         topicName: topic.display_name,
         proficiency: selectedProficiency,
       },
+    });
+  };
+
+  const handleGenerateMore = () => {
+    if (!topic) return;
+    router.push({
+      pathname: '/topic/add-cards',
+      params: { topicId: topic.id.toString() }
     });
   };
 
@@ -159,6 +169,17 @@ export default function SessionSetup() {
             <Text style={styles.startButtonText}>START SESSION</Text>
             <MaterialIcons name="arrow-forward" size={24} color={colors.onPrimaryContainer} />
           </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.generateMoreBtn} 
+            onPress={handleGenerateMore} 
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="creation" size={20} color={colors.neon} />
+            <Text style={styles.generateMoreBtnText}>
+              GENERATE MORE CARDS
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -227,5 +248,13 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: colors.onPrimaryContainer, fontFamily: 'SpaceGrotesk_600SemiBold',
     fontSize: 28, letterSpacing: -0.5, textTransform: 'uppercase',
+  },
+  generateMoreBtn: {
+    borderWidth: 1, borderColor: colors.neon, paddingVertical: 16, marginTop: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
+  },
+  generateMoreBtnText: {
+    color: colors.neon, fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 14, letterSpacing: 1.2, textTransform: 'uppercase',
   },
 });

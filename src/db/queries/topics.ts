@@ -54,13 +54,14 @@ export async function getTopicBySlug(slug: string): Promise<Topic | null> {
 export async function insertCustomTopic(
   slug: string,
   display: string,
-  icon: string = '📌'
+  icon: string = '📌',
+  material: string = ''
 ): Promise<number> {
   const db = await getDatabase();
   try {
     const result = await db.runAsync(
-      `INSERT OR IGNORE INTO Topic (slug, display_name, icon, source, created_at)
-       VALUES (?, ?, ?, 'custom', ?)`, slug, display, icon, Date.now());
+      `INSERT OR IGNORE INTO Topic (slug, display_name, icon, source, material, created_at)
+       VALUES (?, ?, ?, 'custom', ?, ?)`, slug, display, icon, material, Date.now());
     return result.lastInsertRowId;
   } catch (error) {
     console.error('Database Error in insertCustomTopic:', error);

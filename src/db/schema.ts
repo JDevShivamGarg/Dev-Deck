@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS Topic (
   display_name TEXT NOT NULL,
   icon         TEXT,
   source       TEXT NOT NULL DEFAULT 'builtin',
+  material     TEXT,
   active       INTEGER DEFAULT 1,
   created_at   INTEGER
 );

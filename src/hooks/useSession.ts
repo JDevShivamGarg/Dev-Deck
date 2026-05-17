@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCardsDue, getCardsDueCount, insertCard, updateCardProgress } from '../db/queries/cards';
-import { generateCards } from '../ai/generator';
+import { getCardsDue, getCardsDueCount, insertCard, updateCardProgress, getExistingQuestionsForTopic } from '../db/queries/cards';
+import { generateAdditionalCards } from '../ai/generator';
 import { grade } from '../srs/scheduler';
 import { shuffle } from '../utils/shuffle';
 import { PROFICIENCY_DIFFICULTY_MAP } from '../utils/proficiencyMap';
@@ -9,7 +9,6 @@ import type { CardMode, Proficiency } from '../types';
 import Constants from 'expo-constants';
 
 const AI_THRESHOLD = 5;
-const AI_GENERATE_COUNT = 10;
 
 export function useSession(topicId: number, topicName: string, mode: CardMode, proficiency: Proficiency) {
   const [loading, setLoading] = useState(true);
@@ -33,12 +32,13 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
 
         if (apiKey) {
           try {
-            const aiCards = await generateCards(topicName, mode, proficiency, AI_GENERATE_COUNT, apiKey);
-            for (const card of aiCards) {
-              await insertCard(topicId, mode, card, 'ai');
+            const existingQs = await getExistingQuestionsForTopic(topicId);
+            const result = await generateAdditionalCards(topicName, existingQs, apiKey);
+            for (const card of result.cards) {
+              await insertCard(topicId, card._mappedMode as any, card, 'ai');
             }
           } catch {
-            __DEV__ && console.log('AI generation unavailable, using stored cards');
+            __DEV__ && console.log('AI background generation unavailable, using stored cards');
           }
         }
       }

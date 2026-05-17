@@ -80,7 +80,12 @@ export default function HomeScreen() {
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
         <Text style={styles.appBarTitle}>DEVDECK</Text>
-        <MaterialCommunityIcons name="magnify" size={22} color="rgba(255,255,255,0.5)" />
+        <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
+          <MaterialCommunityIcons name="magnify" size={22} color="rgba(255,255,255,0.5)" />
+          <TouchableOpacity onPress={() => router.push('/topic/new')}>
+            <MaterialCommunityIcons name="plus" size={24} color={colors.neon} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Summary section */}

@@ -171,3 +171,15 @@ export async function unretireCard(cardId: number): Promise<void> {
     throw error;
   }
 }
+
+export async function getExistingQuestionsForTopic(topicId: number): Promise<string[]> {
+  const db = await getDatabase();
+  try {
+    const cards = await db.getAllAsync<{ question: string }>(
+      `SELECT question FROM Card WHERE topic_id = ?`, topicId);
+    return cards.map(c => c.question);
+  } catch (error) {
+    console.error('Database Error in getExistingQuestionsForTopic:', error);
+    throw error;
+  }
+}

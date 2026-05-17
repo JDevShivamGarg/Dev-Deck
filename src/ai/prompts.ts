@@ -1,52 +1,48 @@
-import type { CardMode, Proficiency } from '../types';
-
-export function buildPrompt(
-  topic: string,
-  mode: CardMode,
-  proficiency: Proficiency,
-  count: number
+export function buildNewTopicPrompt(
+  topicName: string,
+  material: string
 ): string {
-  const difficultyRange = {
-    beginner: '1-2',
-    intermediate: '2-4',
-    advanced: '4-5',
-  }[proficiency];
+  return `Case 1 — New Topic
+Topic: ${topicName}
+Material: ${material || 'Generate practical, real-world content relevant to this technology.'}
 
-  switch (mode) {
-    case 'mcq':
-      return `Generate ${count} MCQ questions for topic: ${topic}
-Proficiency: ${proficiency}
-Rules:
-- Practical, command/config/behavior focused — not definitions
-- 4 options each, exactly 1 correct
-- Include a brief explanation (1-2 sentences) for the correct answer
-- Difficulty range: ${difficultyRange} (scale 1-5)
+Generate study content from the material above. Return only valid JSON, no explanation:
 
-Return JSON array:
-[{ "question": "", "options": ["","","",""], "answer": "", "explanation": "", "difficulty": 1, "tags": [] }]`;
+{
+  "topic": "...",
+  "mcqs": [{"question": "","options": ["A","B","C","D"],"answer": "A"}],
+  "flashcards": [{"front": "","back": ""}],
+  "qa": [{"question": "","answer": ""}]
+}
 
-    case 'flashcard':
-      return `Generate ${count} flashcard Q&A pairs for topic: ${topic}
-Proficiency: ${proficiency}
-Rules:
-- Focus on practical knowledge: commands, configurations, behaviors, gotchas
-- Front = concise question, Back = concise answer
-- Include a brief explanation
-- Difficulty range: ${difficultyRange} (scale 1-5)
+Count: 10 MCQs, 10 flashcards, 10 Q&A.`;
+}
 
-Return JSON array:
-[{ "question": "", "answer": "", "explanation": "", "difficulty": 1, "tags": [] }]`;
+export function buildExistingTopicPrompt(
+  topicName: string,
+  existingQuestions: string[],
+  material?: string
+): string {
+  const existingList = existingQuestions.length > 0 
+    ? existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')
+    : 'None';
 
-    case 'scenario':
-      return `Generate ${count} scenario-based questions for topic: ${topic}
-Proficiency: ${proficiency}
-Rules:
-- Each question must include a realistic code snippet or configuration
-- Ask about the outcome, bug, or behavior of the snippet
-- Include the correct answer and explanation
-- Difficulty range: ${difficultyRange} (scale 1-5)
+  const materialContext = material ? `\nMaterial to draw from:\n${material}\n` : '';
 
-Return JSON array:
-[{ "question": "", "code_snippet": "", "answer": "", "explanation": "", "difficulty": 1, "tags": [] }]`;
-  }
+  return `Case 2 — New Questions for Existing Topic
+Topic: ${topicName}
+${materialContext}
+
+These questions already exist — do not regenerate or rephrase them:
+${existingList}
+
+Generate additional questions covering different concepts or angles not addressed above. Return only valid JSON, no explanation:
+
+{
+  "mcqs": [{"question": "","options": ["A","B","C","D"],"answer": "A"}],
+  "flashcards": [{"front": "","back": ""}],
+  "qa": [{"question": "","answer": ""}]
+}
+
+Count: 5 MCQs, 5 flashcards, 5 Q&A.`;
 }
