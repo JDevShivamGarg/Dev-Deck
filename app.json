@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "TechFlash",
-    "slug": "techflash",
+    "name": "DevDeck",
+    "slug": "devdeck",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "scheme": "techflash",
+    "scheme": "devdeck",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -19,7 +19,7 @@
         "backgroundColor": "#050505"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.techflash.app"
+      "package": "com.devdeck.app"
     },
     "plugins": [
       "expo-router",

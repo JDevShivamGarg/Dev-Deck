@@ -55,7 +55,7 @@ export default function RootLayout() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.neon} />
-        <Text style={styles.loadingText}>BOOTING TECHFLASH...</Text>
+        <Text style={styles.loadingText}>BOOTING DEVDECK...</Text>
         <StatusBar style="light" />
       </View>
     );

@@ -56,7 +56,7 @@ export default function SettingsScreen() {
       {/* App bar */}
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
-        <Text style={styles.appBarTitle}>TECHFLASH</Text>
+        <Text style={styles.appBarTitle}>DEVDECK</Text>
         <MaterialIcons name="settings" size={22} color={colors.neon} />
       </View>
 

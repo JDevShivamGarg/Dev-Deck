@@ -79,7 +79,7 @@ export default function HomeScreen() {
       {/* Header bar */}
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
-        <Text style={styles.appBarTitle}>TECHFLASH</Text>
+        <Text style={styles.appBarTitle}>DEVDECK</Text>
         <MaterialCommunityIcons name="magnify" size={22} color="rgba(255,255,255,0.5)" />
       </View>
 

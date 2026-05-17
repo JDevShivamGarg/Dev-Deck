@@ -92,7 +92,7 @@ export function FlashCard({ card, onGrade, onNext }: FlashCardProps) {
         <View style={styles.actionFooter}>
           <View style={styles.terminalBox}>
             <View style={styles.terminalPromptRow}>
-              <Text style={styles.terminalPrompt}>root@techflash:~$</Text>
+              <Text style={styles.terminalPrompt}>root@devdeck:~$</Text>
               <Text style={styles.terminalCmd}> await user.response()</Text>
             </View>
 

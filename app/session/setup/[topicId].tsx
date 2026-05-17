@@ -62,7 +62,7 @@ export default function SessionSetup() {
         <TouchableOpacity onPress={() => router.back()} style={styles.appBarBtn}>
           <MaterialCommunityIcons name="console-line" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>TECHFLASH</Text>
+        <Text style={styles.appBarTitle}>DEVDECK</Text>
         <TouchableOpacity style={styles.appBarBtn}>
           <MaterialIcons name="settings" size={22} color="#fff" />
         </TouchableOpacity>

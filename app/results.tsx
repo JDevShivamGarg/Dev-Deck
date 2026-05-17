@@ -43,7 +43,7 @@ export default function ResultsScreen() {
         <TouchableOpacity style={styles.appBarBtn}>
           <MaterialIcons name="code" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>TECHFLASH</Text>
+        <Text style={styles.appBarTitle}>DEVDECK</Text>
         <TouchableOpacity style={styles.appBarBtn}>
           <MaterialIcons name="settings" size={22} color="#fff" />
         </TouchableOpacity>
