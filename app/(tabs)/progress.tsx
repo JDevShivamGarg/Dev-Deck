@@ -61,14 +61,14 @@ export default function ProgressScreen() {
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
         <Text style={styles.appBarTitle}>DEVDECK</Text>
-        <MaterialIcons name="settings" size={22} color="#fff" />
+        <View style={{ width: 22 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Page header */}
         <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>SYSTEM.PROGRESS</Text>
-          <Text style={styles.pageSub}>Last synchronization: {new Date().toISOString().split('T')[1].substring(0, 8)} UTC</Text>
+          <Text style={styles.pageSub}>Last synchronization: {new Date().toLocaleTimeString()}</Text>
         </View>
 
         {/* Streak */}
@@ -76,7 +76,7 @@ export default function ProgressScreen() {
           <View style={styles.streakBgIcon}>
             <MaterialIcons name="local-fire-department" size={64} color={colors.neon} />
           </View>
-          <Text style={styles.streakLabel}>ACTIVE_STREAK</Text>
+          <Text style={styles.streakLabel}>ACTIVE STREAK</Text>
           <Text style={styles.streakValue}>{streak} DAYS</Text>
           <View style={styles.streakMsgRow}>
             <Text style={styles.streakPrompt}>&gt;&gt;</Text>
@@ -110,8 +110,7 @@ export default function ProgressScreen() {
         {/* Session History */}
         <View style={styles.moduleCard}>
           <View style={styles.moduleHeader}>
-            <Text style={styles.moduleHeaderText}>SESSION_LOG</Text>
-            <Text style={styles.moduleHeaderSub}>tail -n 4</Text>
+            <Text style={styles.moduleHeaderText}>SESSION LOG</Text>
           </View>
           {sessions.length === 0 && (
             <View style={styles.moduleBody}>

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { getActiveTopics, insertCustomTopic } from '../../src/db/queries/topics';
+import { getAllTopics, insertCustomTopic, toggleTopicActive } from '../../src/db/queries/topics';
 import { getUserConfig, setUserConfig } from '../../src/db/queries/config';
 import { colors } from '../../src/theme/colors';
 import type { Topic, Proficiency } from '../../src/types';
@@ -17,8 +17,8 @@ export default function SettingsScreen() {
   const [customTopicInput, setCustomTopicInput] = useState('');
 
   const loadData = useCallback(async () => {
-    const active = await getActiveTopics();
-    setTopics(active);
+    const all = await getAllTopics();
+    setTopics(all);
 
     const key = await getUserConfig('groq_api_key');
     if (key) setApiKey(key);
@@ -48,6 +48,11 @@ export default function SettingsScreen() {
     loadData();
   };
 
+  const handleToggleTopic = async (topicId: number, currentActive: number) => {
+    await toggleTopicActive(topicId, currentActive === 1 ? 0 : 1);
+    loadData();
+  };
+
   const builtinTopics = topics.filter((t) => t.is_builtin === 1);
   const customTopics = topics.filter((t) => t.is_builtin === 0);
 
@@ -57,7 +62,7 @@ export default function SettingsScreen() {
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
         <Text style={styles.appBarTitle}>DEVDECK</Text>
-        <MaterialIcons name="settings" size={22} color={colors.neon} />
+        <View style={{ width: 22 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -100,17 +105,26 @@ export default function SettingsScreen() {
             <Text style={styles.sectionLabel}>CORE TOPIC SUBSCRIPTIONS</Text>
           </View>
           <View style={styles.topicList}>
-            {builtinTopics.map((t, i) => (
-              <View key={t.id} style={[styles.topicRow, i < builtinTopics.length - 1 && styles.topicRowBorder]}>
-                <View style={styles.topicRowLeft}>
-                  <MaterialCommunityIcons name="folder-outline" size={18} color={colors.onSurfaceVariant} />
-                  <Text style={styles.topicRowName}>{t.display_name.toUpperCase()}</Text>
+            {builtinTopics.map((t, i) => {
+              const isActive = t.active === 1;
+              return (
+                <View key={t.id} style={[styles.topicRow, i < builtinTopics.length - 1 && styles.topicRowBorder]}>
+                  <View style={styles.topicRowLeft}>
+                    <MaterialCommunityIcons name="folder-outline" size={18} color={colors.onSurfaceVariant} />
+                    <Text style={[styles.topicRowName, !isActive && { color: colors.onSurfaceVariant }]}>
+                      {t.display_name.toUpperCase()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={[styles.toggleTrack, isActive && styles.toggleTrackActive]}
+                    onPress={() => handleToggleTopic(t.id, t.active)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.toggleThumb, isActive && styles.toggleThumbActive]} />
+                  </TouchableOpacity>
                 </View>
-                <View style={[styles.toggleTrack, styles.toggleTrackActive]}>
-                  <View style={[styles.toggleThumb, styles.toggleThumbActive]} />
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -118,7 +132,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.neonDot} />
-            <Text style={styles.sectionLabel}>CUSTOM TRACKING VECTORS</Text>
+            <Text style={styles.sectionLabel}>CUSTOM TOPICS</Text>
           </View>
           <View style={styles.customInputRow}>
             <View style={styles.customInputWrap}>
@@ -140,14 +154,23 @@ export default function SettingsScreen() {
 
           {customTopics.length > 0 && (
             <View style={styles.topicList}>
-              {customTopics.map((t, i) => (
-                <View key={t.id} style={[styles.customRow, i < customTopics.length - 1 && styles.topicRowBorder]}>
-                  <Text style={styles.customRowText}>{t.display_name.toUpperCase()}</Text>
-                  <TouchableOpacity>
-                    <MaterialIcons name="close" size={16} color={colors.onSurfaceVariant} />
-                  </TouchableOpacity>
-                </View>
-              ))}
+              {customTopics.map((t, i) => {
+                const isActive = t.active === 1;
+                return (
+                  <View key={t.id} style={[styles.customRow, i < customTopics.length - 1 && styles.topicRowBorder]}>
+                    <Text style={[styles.customRowText, !isActive && { color: colors.onSurfaceVariant }]}>
+                      {t.display_name.toUpperCase()}
+                    </Text>
+                    <TouchableOpacity 
+                      style={[styles.toggleTrack, isActive && styles.toggleTrackActive]}
+                      onPress={() => handleToggleTopic(t.id, t.active)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={[styles.toggleThumb, isActive && styles.toggleThumbActive]} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
             </View>
           )}
         </View>

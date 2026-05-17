@@ -73,9 +73,7 @@ export default function SessionSetup() {
           <MaterialCommunityIcons name="console-line" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.appBarTitle}>DEVDECK</Text>
-        <TouchableOpacity style={styles.appBarBtn}>
-          <MaterialIcons name="settings" size={22} color="#fff" />
-        </TouchableOpacity>
+        <View style={{ width: 38 }} />
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentInner} showsVerticalScrollIndicator={false}>

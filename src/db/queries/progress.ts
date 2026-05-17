@@ -69,17 +69,27 @@ export async function getOverallProgress(): Promise<{
   let streak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
 
-  for (let i = 0; i < sessions.length; i++) {
-    const sessionDate = new Date(sessions[i].day);
-    const expectedDate = new Date(today);
-    expectedDate.setDate(expectedDate.getDate() - i);
-    expectedDate.setHours(0, 0, 0, 0);
+  const parseLocalDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-');
+    return new Date(Number(y), Number(m) - 1, Number(d));
+  };
 
-    if (sessionDate.getTime() === expectedDate.getTime()) {
-      streak++;
-    } else {
-      break;
+  if (sessions.length > 0) {
+    const firstSessionDate = parseLocalDate(sessions[0].day);
+    if (firstSessionDate.getTime() === today.getTime() || firstSessionDate.getTime() === yesterday.getTime()) {
+      let currentDateToMatch = firstSessionDate;
+      for (let i = 0; i < sessions.length; i++) {
+        const sessionDate = parseLocalDate(sessions[i].day);
+        if (sessionDate.getTime() === currentDateToMatch.getTime()) {
+          streak++;
+          currentDateToMatch.setDate(currentDateToMatch.getDate() - 1);
+        } else {
+          break;
+        }
+      }
     }
   }
 
