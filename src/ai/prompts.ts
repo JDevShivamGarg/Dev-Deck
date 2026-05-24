@@ -1,10 +1,20 @@
+function sanitizeMaterial(material?: string): string {
+  if (!material) return '';
+  const cap = 12000;
+  if (material.length > cap) {
+    return `${material.substring(0, cap)}\n\n... [TRUNCATED FOR CONTEXT SIZE & TOKEN SAFETY]`;
+  }
+  return material;
+}
+
 export function buildNewTopicPrompt(
   topicName: string,
   material: string
 ): string {
+  const sanitized = sanitizeMaterial(material);
   return `Case 1 — New Topic
 Topic: ${topicName}
-Material: ${material || 'Generate practical, real-world content relevant to this technology.'}
+Material: ${sanitized || 'Generate practical, real-world content relevant to this technology.'}
 
 Generate study content from the material above. Return only valid JSON, no explanation:
 
@@ -42,11 +52,12 @@ export function buildExistingTopicPrompt(
   existingQuestions: string[],
   material?: string
 ): string {
+  const sanitized = sanitizeMaterial(material);
   const existingList = existingQuestions.length > 0 
     ? existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')
     : 'None';
 
-  const materialContext = material ? `\nMaterial to draw from:\n${material}\n` : '';
+  const materialContext = sanitized ? `\nMaterial to draw from:\n${sanitized}\n` : '';
 
   return `Case 2 — New Questions for Existing Topic
 Topic: ${topicName}
