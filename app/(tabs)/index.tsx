@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,6 +18,16 @@ export default function HomeScreen() {
   const [topics, setTopics] = useState<TopicWithDue[]>([]);
   const [totalDue, setTotalDue] = useState(0);
   const router = useRouter();
+
+  const handleStartSession = () => {
+    if (topics.length === 0) {
+      Alert.alert('No Topics Active', 'Please subscribe to or create a topic in Settings first.');
+      return;
+    }
+    const topicWithDue = topics.find((t) => t.dueCount > 0);
+    const targetTopic = topicWithDue ?? topics[0];
+    router.push(`/session/setup/${targetTopic.id}`);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -66,7 +76,9 @@ export default function HomeScreen() {
         )}
       </View>
       <View style={styles.topicFooter}>
-        <Text style={styles.topicName}>{item.display_name}</Text>
+        <Text style={styles.topicName} numberOfLines={2} ellipsizeMode="tail">
+          {item.display_name}
+        </Text>
         <View style={styles.progressBarBg}>
           <View style={[styles.progressBarFill, { width: `${item.progress * 100}%` }]} />
         </View>
@@ -81,7 +93,9 @@ export default function HomeScreen() {
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
         <Text style={styles.appBarTitle}>DEVDECK</Text>
         <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
-          <MaterialCommunityIcons name="magnify" size={22} color="rgba(255,255,255,0.5)" />
+          <TouchableOpacity onPress={() => router.push('/topic/git-import')}>
+            <MaterialCommunityIcons name="git" size={24} color={colors.neon} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/topic/new')}>
             <MaterialCommunityIcons name="plus" size={24} color={colors.neon} />
           </TouchableOpacity>
@@ -94,7 +108,11 @@ export default function HomeScreen() {
           <Text style={styles.dailyDeckTitle}>DAILY DECK</Text>
           <Text style={styles.dailyDeckSub}>{totalDue} Cards due for review today.</Text>
         </View>
-        <TouchableOpacity style={styles.startBtn} activeOpacity={0.85}>
+        <TouchableOpacity 
+          style={styles.startBtn} 
+          onPress={handleStartSession} 
+          activeOpacity={0.85}
+        >
           <Text style={styles.startBtnText}>START SESSION</Text>
         </TouchableOpacity>
       </View>

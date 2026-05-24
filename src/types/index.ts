@@ -34,6 +34,8 @@ export interface CardProgress {
   times_correct: number;
   next_due: number;
   retired: number;
+  last_response_time_ms?: number;
+  incorrect_streak?: number;
 }
 
 export interface CardWithProgress extends Card {
@@ -44,6 +46,8 @@ export interface CardWithProgress extends Card {
   times_correct: number;
   next_due: number;
   retired: number;
+  last_response_time_ms?: number;
+  incorrect_streak?: number;
 }
 
 export interface SessionRecord {

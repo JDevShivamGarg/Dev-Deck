@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS CardProgress (
   times_seen          INTEGER DEFAULT 0,
   times_correct       INTEGER DEFAULT 0,
   next_due            INTEGER,
-  retired             INTEGER DEFAULT 0
+  retired             INTEGER DEFAULT 0,
+  last_response_time_ms INTEGER DEFAULT 0,
+  incorrect_streak    INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS Session (

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ const PROFICIENCY_LEVELS: Proficiency[] = ['beginner', 'intermediate', 'advanced
 export default function SettingsScreen() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [apiKey, setApiKey] = useState('');
+  const [isEditingKey, setIsEditingKey] = useState(false);
   const [defaultProficiency, setDefaultProficiency] = useState<Proficiency>('intermediate');
   const [customTopicInput, setCustomTopicInput] = useState('');
 
@@ -31,7 +32,18 @@ export default function SettingsScreen() {
 
   const handleSaveKey = async () => {
     await setUserConfig('groq_api_key', apiKey);
-    Alert.alert('Saved', 'API key has been stored.');
+    setIsEditingKey(false);
+    Alert.alert('Saved', 'API key has been stored securely.');
+  };
+
+  const getDisplayKey = () => {
+    if (isEditingKey) return apiKey;
+    if (apiKey) {
+      return apiKey.length > 8 
+        ? `${apiKey.substring(0, 4)}••••••••••••${apiKey.substring(apiKey.length - 4)}` 
+        : '••••••••••••';
+    }
+    return '';
   };
 
   const handleProficiencyChange = async (prof: Proficiency) => {
@@ -58,109 +70,67 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      {/* App bar */}
-      <View style={styles.appBar}>
-        <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
-        <Text style={styles.appBarTitle}>DEVDECK</Text>
-        <View style={{ width: 22 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.headerBlock}>
-          <Text style={styles.headerTitle}>SYSTEM CONFIG</Text>
-          <Text style={styles.headerSub}>Manage content streams and integration parameters.</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        {/* App bar */}
+        <View style={styles.appBar}>
+          <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
+          <Text style={styles.appBarTitle}>DEVDECK</Text>
+          <View style={{ width: 22 }} />
         </View>
 
-        {/* Proficiency */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.neonDot} />
-            <Text style={styles.sectionLabel}>BASE PROFICIENCY LEVEL</Text>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.headerBlock}>
+            <Text style={styles.headerTitle}>SYSTEM CONFIG</Text>
+            <Text style={styles.headerSub}>Manage content streams and integration parameters.</Text>
           </View>
-          <View style={styles.profTabs}>
-            {PROFICIENCY_LEVELS.map((p) => {
-              const isActive = defaultProficiency === p;
-              return (
-                <TouchableOpacity
-                  key={p}
-                  style={[styles.profTab, isActive && styles.profTabActive]}
-                  onPress={() => handleProficiencyChange(p)}
-                  activeOpacity={0.85}
-                >
-                  {isActive && <View style={styles.profTabBar} />}
-                  <Text style={[styles.profTabText, isActive && styles.profTabTextActive]}>
-                    {p.toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
 
-        {/* Built-in topics */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.neonDot} />
-            <Text style={styles.sectionLabel}>CORE TOPIC SUBSCRIPTIONS</Text>
-          </View>
-          <View style={styles.topicList}>
-            {builtinTopics.map((t, i) => {
-              const isActive = t.active === 1;
-              return (
-                <View key={t.id} style={[styles.topicRow, i < builtinTopics.length - 1 && styles.topicRowBorder]}>
-                  <View style={styles.topicRowLeft}>
-                    <MaterialCommunityIcons name="folder-outline" size={18} color={colors.onSurfaceVariant} />
-                    <Text style={[styles.topicRowName, !isActive && { color: colors.onSurfaceVariant }]}>
-                      {t.display_name.toUpperCase()}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={[styles.toggleTrack, isActive && styles.toggleTrackActive]}
-                    onPress={() => handleToggleTopic(t.id, t.active)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.toggleThumb, isActive && styles.toggleThumbActive]} />
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Custom topics */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.neonDot} />
-            <Text style={styles.sectionLabel}>CUSTOM TOPICS</Text>
-          </View>
-          <View style={styles.customInputRow}>
-            <View style={styles.customInputWrap}>
-              <Text style={styles.customPrompt}>&gt;</Text>
-              <TextInput
-                style={styles.customInput}
-                value={customTopicInput}
-                onChangeText={setCustomTopicInput}
-                placeholder="ENTER CUSTOM KEYWORD OR DOMAIN"
-                placeholderTextColor="rgba(196,201,172,0.4)"
-                autoCapitalize="characters"
-                onSubmitEditing={handleAddCustomTopic}
-              />
+          {/* Proficiency */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.neonDot} />
+              <Text style={styles.sectionLabel}>BASE PROFICIENCY LEVEL</Text>
             </View>
-            <TouchableOpacity style={styles.appendBtn} onPress={handleAddCustomTopic} activeOpacity={0.85}>
-              <Text style={styles.appendBtnText}>APPEND</Text>
-            </TouchableOpacity>
+            <View style={styles.profTabs}>
+              {PROFICIENCY_LEVELS.map((p) => {
+                const isActive = defaultProficiency === p;
+                return (
+                  <TouchableOpacity
+                    key={p}
+                    style={[styles.profTab, isActive && styles.profTabActive]}
+                    onPress={() => handleProficiencyChange(p)}
+                    activeOpacity={0.85}
+                  >
+                    {isActive && <View style={styles.profTabBar} />}
+                    <Text style={[styles.profTabText, isActive && styles.profTabTextActive]}>
+                      {p.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
-          {customTopics.length > 0 && (
+          {/* Built-in topics */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.neonDot} />
+              <Text style={styles.sectionLabel}>CORE TOPIC SUBSCRIPTIONS</Text>
+            </View>
             <View style={styles.topicList}>
-              {customTopics.map((t, i) => {
+              {builtinTopics.map((t, i) => {
                 const isActive = t.active === 1;
                 return (
-                  <View key={t.id} style={[styles.customRow, i < customTopics.length - 1 && styles.topicRowBorder]}>
-                    <Text style={[styles.customRowText, !isActive && { color: colors.onSurfaceVariant }]}>
-                      {t.display_name.toUpperCase()}
-                    </Text>
+                  <View key={t.id} style={[styles.topicRow, i < builtinTopics.length - 1 && styles.topicRowBorder]}>
+                    <View style={styles.topicRowLeft}>
+                      <MaterialCommunityIcons name="folder-outline" size={18} color={colors.onSurfaceVariant} />
+                      <Text style={[styles.topicRowName, !isActive && { color: colors.onSurfaceVariant }]}>
+                        {t.display_name.toUpperCase()}
+                      </Text>
+                    </View>
                     <TouchableOpacity 
                       style={[styles.toggleTrack, isActive && styles.toggleTrackActive]}
                       onPress={() => handleToggleTopic(t.id, t.active)}
@@ -172,36 +142,84 @@ export default function SettingsScreen() {
                 );
               })}
             </View>
-          )}
-        </View>
-
-        {/* API key */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.neonDot} />
-            <Text style={styles.sectionLabel}>EXTERNAL MODEL AUTHENTICATION</Text>
           </View>
-          <View style={styles.apiKeyCard}>
-            <Text style={styles.apiKeyLabel}>GROQ API KEY [Required for AI synthesis]</Text>
-            <View style={styles.apiKeyRow}>
-              <View style={styles.apiKeyInputWrap}>
-                <MaterialCommunityIcons name="key-variant" size={16} color={colors.onSurfaceVariant} style={styles.apiKeyIcon} />
+
+          {/* Custom topics */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.neonDot} />
+              <Text style={styles.sectionLabel}>CUSTOM TOPICS</Text>
+            </View>
+            <View style={styles.customInputRow}>
+              <View style={styles.customInputWrap}>
+                <Text style={styles.customPrompt}>&gt;</Text>
                 <TextInput
-                  style={styles.apiKeyInput}
-                  value={apiKey}
-                  onChangeText={setApiKey}
-                  secureTextEntry
-                  placeholder="gsk_..."
-                  placeholderTextColor={colors.onSurfaceVariant}
+                  style={styles.customInput}
+                  value={customTopicInput}
+                  onChangeText={setCustomTopicInput}
+                  placeholder="ENTER CUSTOM KEYWORD OR DOMAIN"
+                  placeholderTextColor="rgba(196,201,172,0.4)"
+                  autoCapitalize="characters"
+                  onSubmitEditing={handleAddCustomTopic}
                 />
               </View>
-              <TouchableOpacity style={styles.verifyBtn} onPress={handleSaveKey} activeOpacity={0.85}>
-                <Text style={styles.verifyBtnText}>SAVE</Text>
+              <TouchableOpacity style={styles.appendBtn} onPress={handleAddCustomTopic} activeOpacity={0.85}>
+                <Text style={styles.appendBtnText}>APPEND</Text>
               </TouchableOpacity>
             </View>
+
+            {customTopics.length > 0 && (
+              <View style={styles.topicList}>
+                {customTopics.map((t, i) => {
+                  const isActive = t.active === 1;
+                  return (
+                    <View key={t.id} style={[styles.customRow, i < customTopics.length - 1 && styles.topicRowBorder]}>
+                      <Text style={[styles.customRowText, !isActive && { color: colors.onSurfaceVariant }]}>
+                        {t.display_name.toUpperCase()}
+                      </Text>
+                      <TouchableOpacity 
+                        style={[styles.toggleTrack, isActive && styles.toggleTrackActive]}
+                        onPress={() => handleToggleTopic(t.id, t.active)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.toggleThumb, isActive && styles.toggleThumbActive]} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
-        </View>
-      </ScrollView>
+
+          {/* API key */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.neonDot} />
+              <Text style={styles.sectionLabel}>EXTERNAL MODEL AUTHENTICATION</Text>
+            </View>
+            <View style={styles.apiKeyCard}>
+              <Text style={styles.apiKeyLabel}>GROQ API KEY [Required for AI synthesis]</Text>
+              <View style={styles.apiKeyRow}>
+                <View style={styles.apiKeyInputWrap}>
+                  <MaterialCommunityIcons name="key-variant" size={16} color={colors.onSurfaceVariant} style={styles.apiKeyIcon} />
+                  <TextInput
+                    style={styles.apiKeyInput}
+                    value={getDisplayKey()}
+                    onFocus={() => setIsEditingKey(true)}
+                    onBlur={() => setIsEditingKey(false)}
+                    onChangeText={setApiKey}
+                    placeholder="gsk_..."
+                    placeholderTextColor={colors.onSurfaceVariant}
+                  />
+                </View>
+                <TouchableOpacity style={styles.verifyBtn} onPress={handleSaveKey} activeOpacity={0.85}>
+                  <Text style={styles.verifyBtnText}>SAVE</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -234,8 +252,8 @@ const styles = StyleSheet.create({
     padding: 8, paddingHorizontal: 16,
   },
   topicRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.surfaceVariant },
-  topicRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  topicRowName: { color: colors.onSurface, fontFamily: 'monospace', fontSize: 14, textTransform: 'uppercase' },
+  topicRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 16 },
+  topicRowName: { color: colors.onSurface, fontFamily: 'monospace', fontSize: 14, textTransform: 'uppercase', flex: 1 },
   toggleTrack: { width: 32, height: 16, borderWidth: 1, borderColor: colors.surfaceVariant, flexDirection: 'row', alignItems: 'center' },
   toggleTrackActive: { borderColor: colors.neon, backgroundColor: 'rgba(195,244,0,0.1)' },
   toggleThumb: { width: 12, height: 12, backgroundColor: colors.surfaceVariant, position: 'absolute', left: 2 },
@@ -253,7 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: 8, paddingHorizontal: 16,
   },
-  customRowText: { color: colors.onSurface, fontFamily: 'monospace', fontSize: 14, textTransform: 'uppercase', paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: 'transparent' },
+  customRowText: { color: colors.onSurface, fontFamily: 'monospace', fontSize: 14, textTransform: 'uppercase', paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: 'transparent', flex: 1, marginRight: 16 },
   apiKeyCard: {
     borderWidth: 1, borderColor: colors.surfaceVariant, backgroundColor: colors.surfaceContainerLowest,
     padding: 16, gap: 16, marginTop: 4,

@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getTopicById } from '../../../src/db/queries/topics';
 import { getCardsDueCount, getExistingQuestionsForTopic, insertCard } from '../../../src/db/queries/cards';
+import { getUserConfig } from '../../../src/db/queries/config';
 import { generateAdditionalCards } from '../../../src/ai/generator';
 import Constants from 'expo-constants';
 import { colors } from '../../../src/theme/colors';
@@ -35,6 +36,9 @@ export default function SessionSetup() {
       getTopicById(Number(topicId)).then(setTopic);
       getCardsDueCount(Number(topicId)).then(setDueCount);
     }
+    getUserConfig('default_proficiency').then(prof => {
+      if (prof) setSelectedProficiency(prof as Proficiency);
+    });
   }, [topicId]);
 
   const handleStart = () => {
@@ -81,7 +85,9 @@ export default function SessionSetup() {
         <View style={styles.topicHeader}>
           <View style={styles.topicHeaderRow}>
             <View style={styles.topicTag}>
-              <Text style={styles.topicTagText}>SYS.TOPIC.{topic.slug.toUpperCase()}</Text>
+              <Text style={styles.topicTagText} numberOfLines={1} ellipsizeMode="tail">
+                SYS.TOPIC.{topic.slug.toUpperCase()}
+              </Text>
             </View>
             <View style={styles.dueBadge}>
               <MaterialIcons name="inbox" size={14} color={colors.onPrimaryContainer} />
@@ -198,7 +204,7 @@ const styles = StyleSheet.create({
   contentInner: { padding: 16, paddingBottom: 48, gap: 48 },
   topicHeader: { borderBottomWidth: 1, borderBottomColor: colors.surfaceVariant, paddingBottom: 16, marginTop: 16 },
   topicHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  topicTag: { backgroundColor: 'rgba(195,244,0,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(195,244,0,0.3)' },
+  topicTag: { backgroundColor: 'rgba(195,244,0,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(195,244,0,0.3)', flexShrink: 1, marginRight: 8 },
   topicTagText: { color: colors.neon, fontFamily: 'monospace', fontSize: 14 },
   dueBadge: {
     backgroundColor: colors.neon, flexDirection: 'row', alignItems: 'center', gap: 4,

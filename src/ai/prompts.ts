@@ -14,19 +14,27 @@ Generate study content from the material above. Return only valid JSON, no expla
     {
       "question": "Deep technical question here",
       "options": ["Plausible wrong answer 1", "Plausible wrong answer 2", "Correct answer", "Plausible wrong answer 3"],
-      "answer": "Correct answer" // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY. Do not use A/B/C/D.
+      "answer": "Correct answer", // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY.
+      "difficulty": 3 // 1-2 (Beginner), 3 (Intermediate), or 4-5 (Advanced)
     }
   ],
-  "flashcards": [{"front": "","back": ""}],
-  "qa": [{"question": "","answer": ""}]
+  "flashcards": [{"front": "","back": "", "difficulty": 1}],
+  "qa": [{"question": "","answer": "", "difficulty": 5}] // This maps to scenario mode
 }
 
 CRITICAL RULES:
-1. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
-2. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
-3. Randomize the position of the correct answer across different questions.
+1. Cover all 3 difficulty levels: Beginner (1 or 2), Intermediate (3), and Advanced (4 or 5).
+2. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
+3. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
+4. Randomize the position of the correct answer across different questions.
+5. Provide a diverse set across all 3 question patterns: MCQ, Flashcard, and Scenario (Q&A).
 
-Count: 10 MCQs, 10 flashcards, 10 Q&A.`;
+Count Details:
+You must provide EXACTLY:
+- 10 MCQs (Include a mix of difficulty 1, 3, and 5)
+- 10 Flashcards (Include a mix of difficulty 1, 3, and 5)
+- 10 Q&A scenarios (Include a mix of difficulty 1, 3, and 5)
+Make sure every single format type contains questions from all three difficulty levels.`;
 }
 
 export function buildExistingTopicPrompt(
@@ -54,17 +62,25 @@ Generate additional questions covering different concepts or angles not addresse
     {
       "question": "Deep technical question here",
       "options": ["Plausible wrong answer 1", "Plausible wrong answer 2", "Correct answer", "Plausible wrong answer 3"],
-      "answer": "Correct answer" // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY. Do not use A/B/C/D.
+      "answer": "Correct answer", // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY.
+      "difficulty": 3 // 1-2 (Beginner), 3 (Intermediate), or 4-5 (Advanced)
     }
   ],
-  "flashcards": [{"front": "","back": ""}],
-  "qa": [{"question": "","answer": ""}]
+  "flashcards": [{"front": "","back": "", "difficulty": 1}],
+  "qa": [{"question": "","answer": "", "difficulty": 5}] // This maps to scenario mode
 }
 
 CRITICAL RULES:
-1. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
-2. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
-3. Randomize the position of the correct answer across different questions.
+1. Cover all 3 difficulty levels: Beginner (1 or 2), Intermediate (3), and Advanced (4 or 5).
+2. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
+3. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
+4. Randomize the position of the correct answer across different questions.
+5. Provide a diverse set across all 3 question patterns: MCQ, Flashcard, and Scenario (Q&A).
 
-Count: 5 MCQs, 5 flashcards, 5 Q&A.`;
+Count Details:
+You must provide EXACTLY:
+- 5 MCQs (Include a mix of difficulty 1, 3, and 5)
+- 5 Flashcards (Include a mix of difficulty 1, 3, and 5)
+- 5 Q&A scenarios (Include a mix of difficulty 1, 3, and 5)
+Make sure every single format type contains questions from all three difficulty levels.`;
 }

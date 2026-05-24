@@ -13,7 +13,8 @@ export async function getCardsDue(
     const now = Date.now();
     return db.getAllAsync<CardWithProgress>(
       `SELECT c.*, cp.interval_days, cp.ease_factor, cp.consecutive_correct,
-              cp.times_seen, cp.times_correct, cp.next_due, cp.retired
+              cp.times_seen, cp.times_correct, cp.next_due, cp.retired,
+              cp.last_response_time_ms, cp.incorrect_streak
        FROM Card c
        JOIN CardProgress cp ON cp.card_id = c.id
        WHERE c.topic_id = ?
@@ -111,6 +112,8 @@ export async function updateCardProgress(
     times_correct: number;
     next_due: number;
     retired: number;
+    last_response_time_ms?: number;
+    incorrect_streak?: number;
   }
 ): Promise<void> {
   const db = await getDatabase();
@@ -118,7 +121,8 @@ export async function updateCardProgress(
     await db.runAsync(
       `UPDATE CardProgress
        SET interval_days = ?, ease_factor = ?, consecutive_correct = ?,
-           times_seen = ?, times_correct = ?, next_due = ?, retired = ?
+           times_seen = ?, times_correct = ?, next_due = ?, retired = ?,
+           last_response_time_ms = ?, incorrect_streak = ?
        WHERE card_id = ?`, 
         progress.interval_days,
         progress.ease_factor,
@@ -127,6 +131,8 @@ export async function updateCardProgress(
         progress.times_correct,
         progress.next_due,
         progress.retired,
+        progress.last_response_time_ms ?? 0,
+        progress.incorrect_streak ?? 0,
         cardId,
       );
   } catch (error) {

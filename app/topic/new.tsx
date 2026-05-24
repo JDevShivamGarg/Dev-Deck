@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import * as Clipboard from 'expo-clipboard';
 import { colors } from '../../src/theme/colors';
 import { insertCustomTopic } from '../../src/db/queries/topics';
 import { insertCard } from '../../src/db/queries/cards';
+import { getUserConfig } from '../../src/db/queries/config';
 import { generateNewTopic, parseGeneratedCardsJSON } from '../../src/ai/generator';
 import { buildNewTopicPrompt } from '../../src/ai/prompts';
 import Constants from 'expo-constants';
@@ -35,9 +36,12 @@ export default function NewTopicScreen() {
       return;
     }
 
-    const apiKey = Constants.expoConfig?.extra?.groqApiKey 
-      ?? process.env.EXPO_PUBLIC_GROQ_API_KEY 
-      ?? '';
+    let apiKey = await getUserConfig('groq_api_key');
+    if (!apiKey) {
+      apiKey = Constants.expoConfig?.extra?.groqApiKey 
+        ?? process.env.EXPO_PUBLIC_GROQ_API_KEY 
+        ?? '';
+    }
 
     if (!apiKey) {
       Alert.alert('Configuration Error', 'API key is missing.');
@@ -109,86 +113,91 @@ export default function NewTopicScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.appBarBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.onSurface} />
-        </TouchableOpacity>
-        <Text style={styles.appBarTitle}>NEW TOPIC</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.appBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.appBarBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.onSurface} />
+          </TouchableOpacity>
+          <Text style={styles.appBarTitle}>NEW TOPIC</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Core Inputs */}
-        <Text style={styles.label}>TOPIC NAME</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. React Hooks"
-          placeholderTextColor={colors.onSurfaceVariant}
-          value={topicName}
-          onChangeText={setTopicName}
-          editable={!isGenerating}
-        />
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {/* Core Inputs */}
+          <Text style={styles.label}>TOPIC NAME</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. React Hooks"
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={topicName}
+            onChangeText={setTopicName}
+            editable={!isGenerating}
+          />
 
-        <Text style={styles.label}>SOURCE MATERIAL</Text>
-        <Text style={styles.subLabel}>Paste documentation or notes to serve as context.</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Paste material here..."
-          placeholderTextColor={colors.onSurfaceVariant}
-          value={material}
-          onChangeText={setMaterial}
-          multiline
-          textAlignVertical="top"
-          editable={!isGenerating}
-        />
+          <Text style={styles.label}>SOURCE MATERIAL</Text>
+          <Text style={styles.subLabel}>Paste documentation or notes to serve as context.</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Paste material here..."
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={material}
+            onChangeText={setMaterial}
+            multiline
+            textAlignVertical="top"
+            editable={!isGenerating}
+          />
 
-        {/* Auto Flow */}
-        <View style={styles.sectionDivider} />
-        <Text style={styles.sectionTitle}>OPTION 1: AUTOMATIC</Text>
-        <TouchableOpacity 
-          style={[styles.generateBtn, isGenerating && styles.disabledBtn]} 
-          onPress={handleGenerateGroq}
-          disabled={isGenerating}
-          activeOpacity={0.8}
-        >
-          {isGenerating ? (
-            <ActivityIndicator color={colors.dark} />
-          ) : (
-            <Text style={styles.generateBtnText}>GENERATE VIA GROQ</Text>
-          )}
-        </TouchableOpacity>
+          {/* Auto Flow */}
+          <View style={styles.sectionDivider} />
+          <Text style={styles.sectionTitle}>OPTION 1: AUTOMATIC</Text>
+          <TouchableOpacity 
+            style={[styles.generateBtn, isGenerating && styles.disabledBtn]} 
+            onPress={handleGenerateGroq}
+            disabled={isGenerating}
+            activeOpacity={0.8}
+          >
+            {isGenerating ? (
+              <ActivityIndicator color={colors.dark} />
+            ) : (
+              <Text style={styles.generateBtnText}>GENERATE VIA GROQ</Text>
+            )}
+          </TouchableOpacity>
 
-        {/* Manual Flow */}
-        <View style={styles.sectionDivider} />
-        <Text style={styles.sectionTitle}>OPTION 2: MANUAL (BYO LLM)</Text>
-        <Text style={styles.subLabel}>1. Copy the generated prompt and paste it into ChatGPT/Claude.</Text>
-        
-        <TouchableOpacity style={styles.secondaryBtn} onPress={handleCopyPrompt}>
-          <MaterialCommunityIcons name="content-copy" size={20} color={colors.neon} />
-          <Text style={styles.secondaryBtnText}>COPY PROMPT TO CLIPBOARD</Text>
-        </TouchableOpacity>
+          {/* Manual Flow */}
+          <View style={styles.sectionDivider} />
+          <Text style={styles.sectionTitle}>OPTION 2: MANUAL (BYO LLM)</Text>
+          <Text style={styles.subLabel}>1. Copy the generated prompt and paste it into ChatGPT/Claude.</Text>
+          
+          <TouchableOpacity style={styles.secondaryBtn} onPress={handleCopyPrompt}>
+            <MaterialCommunityIcons name="content-copy" size={20} color={colors.neon} />
+            <Text style={styles.secondaryBtnText}>COPY PROMPT TO CLIPBOARD</Text>
+          </TouchableOpacity>
 
-        <Text style={[styles.subLabel, { marginTop: 8 }]}>2. Paste the raw JSON response below.</Text>
-        <TextInput
-          style={[styles.input, styles.textArea, { height: 120 }]}
-          placeholder={`{\n  "topic": "...",\n  "mcqs": [\n    {\n      "question": "...",\n      "options": ["A", "B", "C", "D"],\n      "answer": "A"\n    }\n  ],\n  "flashcards": [...],\n  "qa": [...]\n}`}
-          placeholderTextColor={colors.onSurfaceVariant}
-          value={manualJson}
-          onChangeText={setManualJson}
-          multiline
-          textAlignVertical="top"
-          editable={!isGenerating}
-        />
+          <Text style={[styles.subLabel, { marginTop: 8 }]}>2. Paste the raw JSON response below.</Text>
+          <TextInput
+            style={[styles.input, styles.textArea, { height: 120 }]}
+            placeholder={`{\n  "topic": "...",\n  "mcqs": [\n    {\n      "question": "...",\n      "options": ["A", "B", "C", "D"],\n      "answer": "A"\n    }\n  ],\n  "flashcards": [...],\n  "qa": [...]\n}`}
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={manualJson}
+            onChangeText={setManualJson}
+            multiline
+            textAlignVertical="top"
+            editable={!isGenerating}
+          />
 
-        <TouchableOpacity 
-          style={styles.generateBtn} 
-          onPress={handleImportJson}
-          disabled={isGenerating}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.generateBtnText}>IMPORT CARDS</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity 
+            style={styles.generateBtn} 
+            onPress={handleImportJson}
+            disabled={isGenerating}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.generateBtnText}>IMPORT CARDS</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

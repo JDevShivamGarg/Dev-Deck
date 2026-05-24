@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
@@ -82,7 +82,12 @@ export default function ScenarioSession() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

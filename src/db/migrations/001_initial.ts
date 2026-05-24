@@ -15,6 +15,19 @@ export async function runMigrations(): Promise<void> {
     // Column might already exist
   }
 
+  // Add adaptive SRS columns to CardProgress if they don't exist
+  try {
+    await db.execAsync(`ALTER TABLE CardProgress ADD COLUMN last_response_time_ms INTEGER DEFAULT 0;`);
+  } catch (err) {
+    // Column might already exist
+  }
+
+  try {
+    await db.execAsync(`ALTER TABLE CardProgress ADD COLUMN incorrect_streak INTEGER DEFAULT 0;`);
+  } catch (err) {
+    // Column might already exist
+  }
+
   // Seed builtin topics if not present
   for (const topic of BUILTIN_TOPICS) {
     await db.runAsync(

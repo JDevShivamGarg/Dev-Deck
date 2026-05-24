@@ -82,7 +82,7 @@ export function parseGeneratedCardsJSON(content: string): BatchGenerationResult 
             question: mcq.question,
             options: mcq.options,
             answer: mcq.answer,
-            difficulty: 3, // Defaulting as prompt doesn't specify difficulty
+            difficulty: mcq.difficulty || 3,
             explanation: 'Generated from material', // Fallback
             _mappedMode: 'mcq'
           } as RawCard & { _mappedMode: string });
@@ -97,7 +97,7 @@ export function parseGeneratedCardsJSON(content: string): BatchGenerationResult 
           cards.push({
             question: fc.front,
             answer: fc.back,
-            difficulty: 3,
+            difficulty: fc.difficulty || 3,
             explanation: 'Generated from material',
             _mappedMode: 'flashcard'
           } as RawCard & { _mappedMode: string });
@@ -113,7 +113,7 @@ export function parseGeneratedCardsJSON(content: string): BatchGenerationResult 
             question: qa.question,
             answer: qa.answer,
             code_snippet: '', // Keep empty or generate if needed
-            difficulty: 3,
+            difficulty: qa.difficulty || 3,
             explanation: qa.answer, // Use answer as explanation too
             _mappedMode: 'scenario'
           } as RawCard & { _mappedMode: string });

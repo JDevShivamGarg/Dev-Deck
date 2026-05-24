@@ -5,6 +5,7 @@ import { grade } from '../srs/scheduler';
 import { shuffle } from '../utils/shuffle';
 import { PROFICIENCY_DIFFICULTY_MAP } from '../utils/proficiencyMap';
 import { useSessionStore } from '../store/session';
+import { triggerRemediation } from '../srs/remediation';
 import type { CardMode, Proficiency } from '../types';
 import Constants from 'expo-constants';
 
@@ -14,6 +15,11 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const store = useSessionStore();
+  const [cardStartedAt, setCardStartedAt] = useState<number>(Date.now());
+
+  useEffect(() => {
+    setCardStartedAt(Date.now());
+  }, [store.currentIndex]);
 
   const loadCards = useCallback(async () => {
     try {
@@ -59,6 +65,8 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
     const currentCard = store.queue[store.currentIndex];
     if (!currentCard) return;
 
+    const elapsed = Date.now() - cardStartedAt;
+
     const updated = grade(
       {
         card_id: currentCard.id,
@@ -69,18 +77,38 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
         times_correct: currentCard.times_correct,
         next_due: currentCard.next_due,
         retired: currentCard.retired,
+        last_response_time_ms: currentCard.last_response_time_ms,
+        incorrect_streak: currentCard.incorrect_streak,
       },
-      correct
+      correct,
+      elapsed
     );
 
     try {
       await updateCardProgress(currentCard.id, updated);
+
+      if (!correct && updated.incorrect_streak !== undefined && updated.incorrect_streak >= 3) {
+        let weakTag = topicName;
+        if (currentCard.tags) {
+          try {
+            const parsedTags = JSON.parse(currentCard.tags);
+            if (Array.isArray(parsedTags) && parsedTags.length > 0) {
+              weakTag = parsedTags[0];
+            }
+          } catch {
+            if (typeof currentCard.tags === 'string' && currentCard.tags.trim()) {
+              weakTag = currentCard.tags;
+            }
+          }
+        }
+        triggerRemediation(topicId, topicName, weakTag);
+      }
     } catch (err) {
       console.error('Failed to update card progress:', err);
     }
 
     store.answerCard(correct);
-  }, [store.queue, store.currentIndex]);
+  }, [store.queue, store.currentIndex, cardStartedAt, topicId, topicName]);
 
   useEffect(() => {
     loadCards();

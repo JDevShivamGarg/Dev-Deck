@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
+import { TerminalSandbox } from '../TerminalSandbox';
 import type { CardWithProgress } from '../../types';
 
 interface ScenarioCardProps {
@@ -52,11 +53,20 @@ export function ScenarioCard({ card, onGrade, onNext }: ScenarioCardProps) {
         <Text style={styles.questionText}>{card.question}</Text>
       </View>
 
+      {/* Interactive Sandbox Terminal */}
+      {!showAnswer && (
+        <TerminalSandbox
+          cardAnswer={card.answer}
+          cardQuestion={card.question}
+          onSuccess={() => setShowAnswer(true)}
+        />
+      )}
+
       {/* Reveal button */}
       {!showAnswer && (
         <TouchableOpacity onPress={() => setShowAnswer(true)} style={styles.revealBtn} activeOpacity={0.85}>
           <MaterialIcons name="visibility" size={18} color={colors.dark} />
-          <Text style={styles.revealBtnText}>REVEAL ANALYSIS</Text>
+          <Text style={styles.revealBtnText}>BYPASS & REVEAL ANALYSIS</Text>
         </TouchableOpacity>
       )}
 
@@ -108,7 +118,7 @@ export function ScenarioCard({ card, onGrade, onNext }: ScenarioCardProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 100 },
+  content: { padding: 16, paddingBottom: 24 },
   headerRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     borderBottomWidth: 1, borderBottomColor: colors.surfaceContainerHighest, paddingBottom: 8, marginBottom: 24,
