@@ -1,6 +1,6 @@
 # DevDeck 🚀
 
-[![Download APK](https://img.shields.io/badge/Download-Android_APK-C3F400?style=for-the-badge&logo=android&logoColor=050505&labelColor=111111)](https://expo.dev/accounts/depresseddeveloper/projects/devdeck/builds/9abb1cb2-2e55-459)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK-C3F400?style=for-the-badge&logo=android&logoColor=050505&labelColor=111111)](https://expo.dev/accounts/depresseddeveloper/projects/devdeck/builds/dd21c52a-fe70-4b66-8823-da4cd96345af)
 
 ![DevDeck Demo Preview](https://img.shields.io/badge/Status-Active-brightgreen.svg)
 ![Expo](https://img.shields.io/badge/Expo-54.0-black.svg?style=flat&logo=expo)
