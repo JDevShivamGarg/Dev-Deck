@@ -9,9 +9,10 @@ interface ScenarioCardProps {
   card: CardWithProgress;
   onGrade: (correct: boolean) => void;
   onNext: () => void;
+  topicSlug?: string;
 }
 
-export function ScenarioCard({ card, onGrade, onNext }: ScenarioCardProps) {
+export function ScenarioCard({ card, onGrade, onNext, topicSlug }: ScenarioCardProps) {
   const [showAnswer, setShowAnswer] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
 
@@ -54,7 +55,7 @@ export function ScenarioCard({ card, onGrade, onNext }: ScenarioCardProps) {
       </View>
 
       {/* Interactive Sandbox Terminal */}
-      {!showAnswer && (
+      {!showAnswer && topicSlug === 'git' && (
         <TerminalSandbox
           cardAnswer={card.answer}
           cardQuestion={card.question}
@@ -66,7 +67,7 @@ export function ScenarioCard({ card, onGrade, onNext }: ScenarioCardProps) {
       {!showAnswer && (
         <TouchableOpacity onPress={() => setShowAnswer(true)} style={styles.revealBtn} activeOpacity={0.85}>
           <MaterialIcons name="visibility" size={18} color={colors.dark} />
-          <Text style={styles.revealBtnText}>BYPASS & REVEAL ANALYSIS</Text>
+          <Text style={styles.revealBtnText}>{topicSlug === 'git' ? 'BYPASS & REVEAL ANALYSIS' : 'REVEAL ANALYSIS'}</Text>
         </TouchableOpacity>
       )}
 

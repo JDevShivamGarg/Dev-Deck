@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
 import { ScenarioCard } from '../../src/components/cards/ScenarioCard';
 import { TimerBar } from '../../src/components/TimerBar';
@@ -10,13 +10,15 @@ import { getUserConfig } from '../../src/db/queries/config';
 import { useSessionStore } from '../../src/store/session';
 import { colors } from '../../src/theme/colors';
 import { useTimer } from '../../src/hooks/useTimer';
+import { checkAndUpdateStreak } from '../../src/utils/streak';
 import type { Proficiency } from '../../src/types';
 
 export default function ScenarioSession() {
-  const { topicId, topicName, proficiency } = useLocalSearchParams<{
+  const { topicId, topicName, proficiency, slug } = useLocalSearchParams<{
     topicId: string;
     topicName: string;
     proficiency: string;
+    slug: string;
   }>();
   const router = useRouter();
 
@@ -42,6 +44,23 @@ export default function ScenarioSession() {
   const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, score + (isComplete ? 1 : 0));
 
   const store = useSessionStore();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (isComplete) return;
+      e.preventDefault();
+      Alert.alert(
+        'End Session?',
+        'You will lose your progress for this session. Are you sure you want to leave?',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => {} },
+          { text: 'Leave', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
+        ]
+      );
+    });
+    return unsubscribe;
+  }, [navigation, isComplete]);
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
@@ -55,7 +74,8 @@ export default function ScenarioSession() {
         correct: score,
         started_at: store.startedAt ?? Date.now(),
         ended_at: Date.now(),
-      }).then(() => {
+      }).then(async () => {
+        await checkAndUpdateStreak(totalCards);
         store.resetSession();
         router.replace({
           pathname: '/results',
@@ -115,7 +135,7 @@ export default function ScenarioSession() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
+        <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={nextCard} topicSlug={slug} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

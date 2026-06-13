@@ -41,6 +41,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="history"
+        options={{
+          href: '/history',
+          title: 'HISTORY',
+          tabBarLabel: 'HISTORY',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="history" color={color} size={20} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           href: '/settings',

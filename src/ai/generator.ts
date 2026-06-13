@@ -12,7 +12,7 @@ export async function generateNewTopic(
   material: string,
   apiKey: string
 ): Promise<BatchGenerationResult> {
-  const customTemplate = await getUserConfig('prompt_new_topic').catch(() => null);
+  const customTemplate = await getUserConfig('prompt_generation').catch(() => null);
   const prompt = buildNewTopicPrompt(topicName, material, customTemplate);
   return await executeBatchGeneration(prompt, apiKey);
 }
@@ -22,7 +22,7 @@ export async function generateAdditionalCards(
   existingQuestions: string[],
   apiKey: string
 ): Promise<BatchGenerationResult> {
-  const customTemplate = await getUserConfig('prompt_existing_topic').catch(() => null);
+  const customTemplate = await getUserConfig('prompt_generation').catch(() => null);
   const prompt = buildExistingTopicPrompt(topicName, existingQuestions, undefined, customTemplate);
   return await executeBatchGeneration(prompt, apiKey);
 }

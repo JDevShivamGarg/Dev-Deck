@@ -70,3 +70,20 @@ export async function getRecentSessions(limit: number = 4): Promise<(SessionReco
     throw error;
   }
 }
+
+export async function getCardsReviewedToday(): Promise<number> {
+  const db = await getDatabase();
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const startMs = startOfDay.getTime();
+  
+  try {
+    const result = await db.getFirstAsync<{ sum: number }>(
+      `SELECT SUM(total_cards) as sum FROM Session WHERE ended_at >= ?`, startMs
+    );
+    return result?.sum || 0;
+  } catch (error) {
+    console.error('Database Error in getCardsReviewedToday:', error);
+    return 0;
+  }
+}

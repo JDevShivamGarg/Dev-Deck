@@ -8,6 +8,7 @@ export interface AnswerRecord {
   answer: string;
   options: string | null;
   mode: CardMode;
+  difficulty: number;
   /** MCQ: the option string the user selected */
   userChoice?: string;
 }
@@ -73,6 +74,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       answer: card.answer,
       options: card.options,
       mode: card.mode,
+      difficulty: card.difficulty,
       userChoice,
     };
 

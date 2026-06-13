@@ -5,6 +5,8 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getActiveTopics } from '../../src/db/queries/topics';
 import { getCardsDueCount, getAllCardsDueCount } from '../../src/db/queries/cards';
+import { getUserConfig } from '../../src/db/queries/config';
+import { getCardsReviewedToday } from '../../src/db/queries/sessions';
 import { TOPIC_ICON_MAP } from '../../src/data/topics';
 import { colors } from '../../src/theme/colors';
 import type { Topic } from '../../src/types';
@@ -17,6 +19,9 @@ interface TopicWithDue extends Topic {
 export default function HomeScreen() {
   const [topics, setTopics] = useState<TopicWithDue[]>([]);
   const [totalDue, setTotalDue] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [dailyProgress, setDailyProgress] = useState(0);
+  const [dailyGoal, setDailyGoal] = useState(30);
   const router = useRouter();
 
   const handleStartSession = () => {
@@ -35,6 +40,15 @@ export default function HomeScreen() {
         const active = await getActiveTopics();
         const due = await getAllCardsDueCount();
         setTotalDue(due);
+
+        const [st, goalStr, prog] = await Promise.all([
+          getUserConfig('streak_count'),
+          getUserConfig('daily_goal'),
+          getCardsReviewedToday(),
+        ]);
+        setStreak(parseInt(st || '0', 10));
+        setDailyGoal(parseInt(goalStr || '30', 10));
+        setDailyProgress(prog);
 
         const withDue = await Promise.all(
           active.map(async (t) => ({
@@ -93,9 +107,10 @@ export default function HomeScreen() {
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
         <Text style={styles.appBarTitle}>DEVDECK</Text>
         <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => router.push('/topic/git-import')}>
-            <MaterialCommunityIcons name="git" size={24} color={colors.neon} />
-          </TouchableOpacity>
+          <View style={styles.streakBadge}>
+            <MaterialCommunityIcons name="fire" size={16} color={streak > 0 ? '#FFA500' : colors.surfaceVariant} />
+            <Text style={styles.streakText}>{streak}</Text>
+          </View>
           <TouchableOpacity onPress={() => router.push('/topic/new')}>
             <MaterialCommunityIcons name="plus" size={24} color={colors.neon} />
           </TouchableOpacity>
@@ -104,10 +119,23 @@ export default function HomeScreen() {
 
       {/* Summary section */}
       <View style={styles.summarySection}>
-        <View style={{ flex: 1, paddingRight: 16 }}>
-          <Text style={styles.dailyDeckTitle}>DAILY DECK</Text>
-          <Text style={styles.dailyDeckSub}>{totalDue} Cards due for review today.</Text>
+        <View style={{ flex: 1, paddingRight: 16, gap: 12 }}>
+          <View>
+            <Text style={styles.dailyDeckTitle}>DAILY DECK</Text>
+            <Text style={styles.dailyDeckSub}>{totalDue} Cards due for review.</Text>
+          </View>
+          
+          <View>
+            <View style={styles.goalRow}>
+              <Text style={styles.goalLabel}>DAILY GOAL</Text>
+              <Text style={styles.goalText}>{dailyProgress} / {dailyGoal}</Text>
+            </View>
+            <View style={styles.goalBarBg}>
+              <View style={[styles.goalBarFill, { width: `${Math.min(100, (dailyProgress / dailyGoal) * 100)}%` }]} />
+            </View>
+          </View>
         </View>
+
         <TouchableOpacity 
           style={styles.startBtn} 
           onPress={handleStartSession} 
@@ -177,6 +205,47 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 14,
     marginTop: 4,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#1A1A1A',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  streakText: {
+    color: colors.primary,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 14,
+  },
+  goalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  goalLabel: {
+    color: colors.onSurfaceVariant,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  goalText: {
+    color: colors.primary,
+    fontFamily: 'monospace',
+    fontSize: 12,
+  },
+  goalBarBg: {
+    height: 4,
+    backgroundColor: colors.surfaceContainerHigh,
+    width: '100%',
+  },
+  goalBarFill: {
+    height: '100%',
+    backgroundColor: colors.neon,
   },
   startBtn: {
     backgroundColor: colors.neon,

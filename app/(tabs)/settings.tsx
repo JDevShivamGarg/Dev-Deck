@@ -9,7 +9,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getAllTopics, insertCustomTopic, toggleTopicActive } from '../../src/db/queries/topics';
 import { getUserConfig, setUserConfig } from '../../src/db/queries/config';
-import { DEFAULT_NEW_TOPIC_PROMPT, DEFAULT_EXISTING_TOPIC_PROMPT, DEFAULT_SELF_GEN_PROMPT } from '../../src/ai/prompts';
+import { DEFAULT_GENERATION_PROMPT, DEFAULT_SELF_GEN_PROMPT } from '../../src/ai/prompts';
 import { colors } from '../../src/theme/colors';
 import type { Topic, Proficiency } from '../../src/types';
 
@@ -26,13 +26,14 @@ export default function SettingsScreen() {
   // Timer state
   const [timerMode, setTimerMode] = useState<'stopwatch' | 'timer'>('stopwatch');
   const [questionTimeLimit, setQuestionTimeLimit] = useState('30');
+  
+  // Daily Goal state
+  const [dailyGoal, setDailyGoal] = useState('30');
 
   // Prompt editor state
-  const [promptNewTopic, setPromptNewTopic] = useState('');
-  const [promptExistingTopic, setPromptExistingTopic] = useState('');
+  const [promptGeneration, setPromptGeneration] = useState('');
   const [promptSelfGen, setPromptSelfGen] = useState('');
-  const [promptNewExpanded, setPromptNewExpanded] = useState(false);
-  const [promptExistingExpanded, setPromptExistingExpanded] = useState(false);
+  const [promptGenerationExpanded, setPromptGenerationExpanded] = useState(false);
   const [selfGenExpanded, setSelfGenExpanded] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -51,11 +52,11 @@ export default function SettingsScreen() {
     const tl = await getUserConfig('question_time_limit');
     if (tl) setQuestionTimeLimit(tl);
 
-    const pnt = await getUserConfig('prompt_new_topic');
-    setPromptNewTopic(pnt ?? DEFAULT_NEW_TOPIC_PROMPT);
+    const dg = await getUserConfig('daily_goal');
+    if (dg) setDailyGoal(dg);
 
-    const pet = await getUserConfig('prompt_existing_topic');
-    setPromptExistingTopic(pet ?? DEFAULT_EXISTING_TOPIC_PROMPT);
+    const pgen = await getUserConfig('prompt_generation');
+    setPromptGeneration(pgen ?? DEFAULT_GENERATION_PROMPT);
 
     const psg = await getUserConfig('prompt_self_gen');
     setPromptSelfGen(psg ?? DEFAULT_SELF_GEN_PROMPT);
@@ -114,27 +115,26 @@ export default function SettingsScreen() {
     Alert.alert('Saved', `Question time limit set to ${val}s.`);
   };
 
+  const handleSaveDailyGoal = async () => {
+    const val = parseInt(dailyGoal, 10);
+    if (isNaN(val) || val < 1) {
+      Alert.alert('Invalid', 'Enter a number ≥ 1.');
+      return;
+    }
+    await setUserConfig('daily_goal', String(val));
+    Alert.alert('Saved', `Daily goal set to ${val} cards.`);
+  };
+
   // Prompts
-  const handleSavePromptNew = async () => {
-    await setUserConfig('prompt_new_topic', promptNewTopic);
-    Alert.alert('Saved', 'New-topic prompt saved.');
+  const handleSavePromptGeneration = async () => {
+    await setUserConfig('prompt_generation', promptGeneration);
+    Alert.alert('Saved', 'Topic generation prompt saved.');
   };
 
-  const handleResetPromptNew = () => {
-    setPromptNewTopic(DEFAULT_NEW_TOPIC_PROMPT);
-    setUserConfig('prompt_new_topic', DEFAULT_NEW_TOPIC_PROMPT);
-    Alert.alert('Reset', 'New-topic prompt reset to default.');
-  };
-
-  const handleSavePromptExisting = async () => {
-    await setUserConfig('prompt_existing_topic', promptExistingTopic);
-    Alert.alert('Saved', 'Existing-topic prompt saved.');
-  };
-
-  const handleResetPromptExisting = () => {
-    setPromptExistingTopic(DEFAULT_EXISTING_TOPIC_PROMPT);
-    setUserConfig('prompt_existing_topic', DEFAULT_EXISTING_TOPIC_PROMPT);
-    Alert.alert('Reset', 'Existing-topic prompt reset to default.');
+  const handleResetPromptGeneration = () => {
+    setPromptGeneration(DEFAULT_GENERATION_PROMPT);
+    setUserConfig('prompt_generation', DEFAULT_GENERATION_PROMPT);
+    Alert.alert('Reset', 'Topic generation prompt reset to default.');
   };
 
   const validateSelfGenStructure = (template: string): string | null => {
@@ -287,6 +287,32 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          {/* Daily Goal Settings */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.neonDot} />
+              <Text style={styles.sectionLabel}>DAILY GOAL</Text>
+            </View>
+            <View style={styles.apiKeyCard}>
+              <Text style={styles.cardSubLabel}>TARGET CARDS PER DAY</Text>
+              <View style={styles.apiKeyRow}>
+                <View style={[styles.apiKeyInputWrap, { flex: 1 }]}>
+                  <TextInput
+                    style={styles.apiKeyInput}
+                    value={dailyGoal}
+                    onChangeText={setDailyGoal}
+                    keyboardType="numeric"
+                    placeholder="30"
+                    placeholderTextColor={colors.onSurfaceVariant}
+                  />
+                </View>
+                <TouchableOpacity style={styles.verifyBtn} onPress={handleSaveDailyGoal} activeOpacity={0.85}>
+                  <Text style={styles.verifyBtnText}>SAVE</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
           {/* Built-in topics */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -422,71 +448,35 @@ export default function SettingsScreen() {
               </Text>
             </View>
 
-            {/* New Topic prompt */}
+            {/* Topic Generation prompt */}
             <View style={styles.promptEditorBlock}>
               <TouchableOpacity
                 style={styles.promptEditorHeader}
-                onPress={() => setPromptNewExpanded((v) => !v)}
+                onPress={() => setPromptGenerationExpanded((v) => !v)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.promptEditorTitle}>GROQ — NEW TOPIC</Text>
+                <Text style={styles.promptEditorTitle}>GROQ — TOPIC GENERATION</Text>
                 <MaterialIcons
-                  name={promptNewExpanded ? 'expand-less' : 'expand-more'}
+                  name={promptGenerationExpanded ? 'expand-less' : 'expand-more'}
                   size={20}
                   color={colors.onSurfaceVariant}
                 />
               </TouchableOpacity>
-              {promptNewExpanded && (
+              {promptGenerationExpanded && (
                 <View style={styles.promptEditorBody}>
                   <TextInput
                     style={styles.promptTextInput}
-                    value={promptNewTopic}
-                    onChangeText={setPromptNewTopic}
+                    value={promptGeneration}
+                    onChangeText={setPromptGeneration}
                     multiline
                     textAlignVertical="top"
                     placeholderTextColor={colors.onSurfaceVariant}
                   />
                   <View style={styles.promptEditorActions}>
-                    <TouchableOpacity style={styles.promptResetBtn} onPress={handleResetPromptNew} activeOpacity={0.85}>
+                    <TouchableOpacity style={styles.promptResetBtn} onPress={handleResetPromptGeneration} activeOpacity={0.85}>
                       <Text style={styles.promptResetText}>RESET</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.promptSaveBtn} onPress={handleSavePromptNew} activeOpacity={0.85}>
-                      <Text style={styles.promptSaveText}>SAVE</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {/* Existing Topic prompt */}
-            <View style={styles.promptEditorBlock}>
-              <TouchableOpacity
-                style={styles.promptEditorHeader}
-                onPress={() => setPromptExistingExpanded((v) => !v)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.promptEditorTitle}>GROQ — EXISTING TOPIC</Text>
-                <MaterialIcons
-                  name={promptExistingExpanded ? 'expand-less' : 'expand-more'}
-                  size={20}
-                  color={colors.onSurfaceVariant}
-                />
-              </TouchableOpacity>
-              {promptExistingExpanded && (
-                <View style={styles.promptEditorBody}>
-                  <TextInput
-                    style={styles.promptTextInput}
-                    value={promptExistingTopic}
-                    onChangeText={setPromptExistingTopic}
-                    multiline
-                    textAlignVertical="top"
-                    placeholderTextColor={colors.onSurfaceVariant}
-                  />
-                  <View style={styles.promptEditorActions}>
-                    <TouchableOpacity style={styles.promptResetBtn} onPress={handleResetPromptExisting} activeOpacity={0.85}>
-                      <Text style={styles.promptResetText}>RESET</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.promptSaveBtn} onPress={handleSavePromptExisting} activeOpacity={0.85}>
+                    <TouchableOpacity style={styles.promptSaveBtn} onPress={handleSavePromptGeneration} activeOpacity={0.85}>
                       <Text style={styles.promptSaveText}>SAVE</Text>
                     </TouchableOpacity>
                   </View>

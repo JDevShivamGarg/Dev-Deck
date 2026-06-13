@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { updateCardDifficulty } from '../src/db/queries/cards';
 import { useSessionStore } from '../src/store/session';
 import { colors } from '../src/theme/colors';
 import type { AnswerRecord } from '../src/store/session';
@@ -38,9 +39,17 @@ export default function ResultsScreen() {
 
   const [reviewTab, setReviewTab] = useState<'correct' | 'incorrect'>('incorrect');
   const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+  const [localDiffs, setLocalDiffs] = useState<Record<number, number>>({});
 
   const toggleExpand = (cardId: number) =>
     setExpandedCards((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
+
+  const handleDifficultyChange = async (cardId: number, currentDiff: number, change: number) => {
+    const newDiff = Math.max(1, Math.min(5, currentDiff + change));
+    if (newDiff === currentDiff) return;
+    setLocalDiffs(prev => ({ ...prev, [cardId]: newDiff }));
+    await updateCardDifficulty(cardId, newDiff);
+  };
 
   const handleDone = () => {
     resetSession();
@@ -176,9 +185,19 @@ export default function ResultsScreen() {
                             </View>
                           )}
 
-                          {/* Mode badge */}
-                          <View style={styles.reviewModeBadge}>
-                            <Text style={styles.reviewModeBadgeText}>{item.mode.toUpperCase()}</Text>
+                          <View style={styles.reviewCardFooter}>
+                            <View style={styles.reviewModeBadge}>
+                              <Text style={styles.reviewModeBadgeText}>{item.mode.toUpperCase()}</Text>
+                            </View>
+                            <View style={styles.diffControls}>
+                              <Text style={styles.diffLabel}>DIFF: {localDiffs[item.cardId] ?? item.difficulty}</Text>
+                              <TouchableOpacity onPress={() => handleDifficultyChange(item.cardId, localDiffs[item.cardId] ?? item.difficulty, -1)} style={styles.diffBtn}>
+                                <MaterialIcons name="arrow-drop-down" size={24} color={colors.onSurface} />
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={() => handleDifficultyChange(item.cardId, localDiffs[item.cardId] ?? item.difficulty, 1)} style={styles.diffBtn}>
+                                <MaterialIcons name="arrow-drop-up" size={24} color={colors.onSurface} />
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         </View>
                       )}
@@ -282,11 +301,12 @@ const styles = StyleSheet.create({
   reviewAnswerLabel: { color: colors.onSurfaceVariant, fontFamily: 'monospace', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' },
   reviewAnswerCorrect: { color: colors.neon, fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 15, lineHeight: 22 },
   reviewAnswerWrong: { color: colors.error, fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 15, lineHeight: 22 },
-  reviewModeBadge: {
-    alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3,
-    backgroundColor: colors.surfaceContainerHighest, borderWidth: 1, borderColor: colors.surfaceVariant,
-  },
-  reviewModeBadgeText: { color: colors.onSurfaceVariant, fontFamily: 'monospace', fontSize: 10, letterSpacing: 1.2 },
+  reviewModeBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.surfaceContainerHigh },
+  reviewModeBadgeText: { color: colors.onSurfaceVariant, fontFamily: 'monospace', fontSize: 10, letterSpacing: 0.8 },
+  reviewCardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  diffControls: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceContainerHigh, borderRadius: 4 },
+  diffLabel: { color: colors.onSurfaceVariant, fontFamily: 'monospace', fontSize: 10, letterSpacing: 0.8, marginHorizontal: 8 },
+  diffBtn: { paddingHorizontal: 4 },
 
   // Actions
   actionFooter: {

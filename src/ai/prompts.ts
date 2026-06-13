@@ -10,9 +10,11 @@ function sanitizeMaterial(material?: string): string {
 // ─── Default prompt templates ──────────────────────────────────────────────
 // Exported so the settings screen can display and reset them.
 
-export const DEFAULT_NEW_TOPIC_PROMPT = `Case 1 — New Topic
-Topic: {{topic}}
+export const DEFAULT_GENERATION_PROMPT = `Topic: {{topic}}
 Material: {{material}}
+
+These questions already exist — do not regenerate or rephrase them (if any):
+{{existingQuestions}}
 
 Generate study content from the material above. Return only valid JSON, no explanation:
 
@@ -44,47 +46,11 @@ You must provide EXACTLY:
 - 10 Q&A scenarios (Include a mix of difficulty 1, 3, and 5)
 Make sure every single format type contains questions from all three difficulty levels.`;
 
-export const DEFAULT_EXISTING_TOPIC_PROMPT = `Case 2 — New Questions for Existing Topic
-Topic: {{topic}}
-{{material}}
-
-These questions already exist — do not regenerate or rephrase them:
-{{existingQuestions}}
-
-Generate additional questions covering different concepts or angles not addressed above. Return only valid JSON, no explanation:
-
-{
-  "mcqs": [
-    {
-      "question": "Deep technical question here",
-      "options": ["Plausible wrong answer 1", "Plausible wrong answer 2", "Correct answer", "Plausible wrong answer 3"],
-      "answer": "Correct answer", // MUST EXACTLY MATCH ONE OF THE STRINGS IN THE OPTIONS ARRAY.
-      "difficulty": 3 // 1-2 (Beginner), 3 (Intermediate), or 4-5 (Advanced)
-    }
-  ],
-  "flashcards": [{"front": "","back": "", "difficulty": 1}],
-  "qa": [{"question": "","answer": "", "difficulty": 5}] // This maps to scenario mode
-}
-
-CRITICAL RULES:
-1. Cover all 3 difficulty levels: Beginner (1 or 2), Intermediate (3), and Advanced (4 or 5).
-2. For MCQs, the distractors (wrong options) MUST be highly plausible, confusing, and test deep technical understanding. Do NOT make them obviously wrong or easy to guess.
-3. The 'answer' field MUST be the EXACT string of the correct option, not just a letter like 'A' or 'B'.
-4. Randomize the position of the correct answer across different questions.
-5. Provide a diverse set across all 3 question patterns: MCQ, Flashcard, and Scenario (Q&A).
-
-Count Details:
-You must provide EXACTLY:
-- 5 MCQs (Include a mix of difficulty 1, 3, and 5)
-- 5 Flashcards (Include a mix of difficulty 1, 3, and 5)
-- 5 Q&A scenarios (Include a mix of difficulty 1, 3, and 5)
-Make sure every single format type contains questions from all three difficulty levels.`;
-
 /**
  * The "self-generation" prompt is the template users copy into ChatGPT.
  * It uses the same placeholders as the Groq new-topic prompt.
  */
-export const DEFAULT_SELF_GEN_PROMPT = DEFAULT_NEW_TOPIC_PROMPT;
+export const DEFAULT_SELF_GEN_PROMPT = DEFAULT_GENERATION_PROMPT;
 
 // ─── Prompt builders ───────────────────────────────────────────────────────
 
@@ -104,10 +70,11 @@ export function buildNewTopicPrompt(
   customTemplate?: string | null
 ): string {
   const sanitized = sanitizeMaterial(material);
-  const template = customTemplate ?? DEFAULT_NEW_TOPIC_PROMPT;
+  const template = customTemplate ?? DEFAULT_GENERATION_PROMPT;
   return applyTemplate(template, {
     topic: topicName,
     material: sanitized || 'Generate practical, real-world content relevant to this technology.',
+    existingQuestions: 'None',
   });
 }
 
@@ -123,7 +90,7 @@ export function buildExistingTopicPrompt(
       ? existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')
       : 'None';
   const materialContext = sanitized ? `\nMaterial to draw from:\n${sanitized}\n` : '';
-  const template = customTemplate ?? DEFAULT_EXISTING_TOPIC_PROMPT;
+  const template = customTemplate ?? DEFAULT_GENERATION_PROMPT;
   return applyTemplate(template, {
     topic: topicName,
     material: materialContext,

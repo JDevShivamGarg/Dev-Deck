@@ -48,6 +48,7 @@ export default function SessionSetup() {
       params: {
         topicId: topic.id.toString(),
         topicName: topic.display_name,
+        slug: topic.slug,
         proficiency: selectedProficiency,
       },
     });

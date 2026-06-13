@@ -141,6 +141,16 @@ export async function updateCardProgress(
   }
 }
 
+export async function updateCardDifficulty(cardId: number, difficulty: number): Promise<void> {
+  const db = await getDatabase();
+  try {
+    await db.runAsync(`UPDATE Card SET difficulty = ? WHERE id = ?`, Math.max(1, Math.min(5, difficulty)), cardId);
+  } catch (error) {
+    console.error('Database Error in updateCardDifficulty:', error);
+    throw error;
+  }
+}
+
 export async function getCardCountByTopicAndMode(
   topicId: number,
   mode: string

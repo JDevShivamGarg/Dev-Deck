@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  Alert, ActivityIndicator,
+  Alert, ActivityIndicator, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { getCardsByTopic, deleteCard, bulkDeleteCards } from '../../src/db/queries/cards';
+import * as Clipboard from 'expo-clipboard';
+import { getCardsByTopic, deleteCard, bulkDeleteCards, unretireCard } from '../../src/db/queries/cards';
 import { colors } from '../../src/theme/colors';
 import type { CardWithProgress } from '../../src/types';
 
@@ -35,6 +36,8 @@ export default function CardManagerScreen() {
   const [loading, setLoading] = useState(true);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showRetired, setShowRetired] = useState(false);
 
   const loadCards = useCallback(async () => {
     setLoading(true);
@@ -48,9 +51,18 @@ export default function CardManagerScreen() {
 
   useFocusEffect(useCallback(() => { loadCards(); }, [loadCards]));
 
+  const filteredCards = cards.filter(c => {
+    if (!showRetired && c.retired === 1) return false;
+    if (showRetired && c.retired === 0) return false;
+    if (searchQuery.trim()) {
+      return c.question.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return true;
+  });
+
   const groupedCards = (['mcq', 'flashcard', 'scenario'] as const).map((mode) => ({
     mode,
-    items: cards.filter((c) => c.mode === mode),
+    items: filteredCards.filter((c) => c.mode === mode),
   }));
 
   const toggleSelect = (cardId: number) => {
@@ -59,6 +71,34 @@ export default function CardManagerScreen() {
       next.has(cardId) ? next.delete(cardId) : next.add(cardId);
       return next;
     });
+  };
+
+  const handleExport = async () => {
+    const exportData = {
+      topic: topicName,
+      cards: cards.map(c => ({
+        question: c.question,
+        answer: c.answer,
+        options: c.options ? JSON.parse(c.options) : undefined,
+        code_snippet: c.code_snippet,
+        difficulty: c.difficulty,
+        mode: c.mode,
+        explanation: c.explanation
+      }))
+    };
+    await Clipboard.setStringAsync(JSON.stringify(exportData, null, 2));
+    Alert.alert('Exported', 'Copied topic cards to clipboard.');
+  };
+
+  const handleUnretireSingle = (card: CardWithProgress) => {
+    Alert.alert('Unretire Card', 'Move this card back into regular circulation?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Unretire', onPress: async () => {
+          await unretireCard(card.id);
+          loadCards();
+        }
+      }
+    ]);
   };
 
   const selectAll = () => setSelected(new Set(cards.map((c) => c.id)));
@@ -145,6 +185,30 @@ export default function CardManagerScreen() {
         </View>
       )}
 
+      {/* Control Bar */}
+      {!selectMode && cards.length > 0 && (
+        <View style={styles.controlBar}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search cards..."
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <View style={styles.controlActions}>
+            <TouchableOpacity 
+              style={[styles.retiredToggle, showRetired && styles.retiredToggleActive]} 
+              onPress={() => setShowRetired(!showRetired)}
+            >
+              <Text style={[styles.retiredToggleText, showRetired && styles.retiredToggleTextActive]}>RETIRED</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleExport} style={styles.exportBtn}>
+              <MaterialCommunityIcons name="export" size={20} color={colors.neon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.neon} />
@@ -155,6 +219,12 @@ export default function CardManagerScreen() {
           <MaterialCommunityIcons name="card-remove-outline" size={48} color={colors.surfaceVariant} />
           <Text style={styles.emptyTitle}>NO CARDS</Text>
           <Text style={styles.emptySub}>Generate cards for this topic first.</Text>
+          <TouchableOpacity 
+            style={{ marginTop: 16, backgroundColor: colors.neon, paddingVertical: 12, paddingHorizontal: 24 }}
+            onPress={() => router.push({ pathname: '/topic/add-cards', params: { topicId } })}
+          >
+            <Text style={{ color: colors.dark, fontFamily: 'SpaceGrotesk_700Bold', fontSize: 12, letterSpacing: 1.2 }}>GENERATE CARDS</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -222,15 +292,27 @@ export default function CardManagerScreen() {
                           </View>
                         </View>
 
-                        {/* Delete (normal mode) */}
+                        {/* Unretire / Delete (normal mode) */}
                         {!selectMode && (
-                          <TouchableOpacity
-                            style={styles.deleteBtn}
-                            onPress={() => handleDeleteSingle(card)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <MaterialIcons name="delete-outline" size={20} color={colors.error} />
-                          </TouchableOpacity>
+                          <View style={{ gap: 8 }}>
+                            {card.retired === 1 ? (
+                              <TouchableOpacity
+                                style={styles.actionBtn}
+                                onPress={() => handleUnretireSingle(card)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <MaterialIcons name="restore" size={20} color={colors.neon} />
+                              </TouchableOpacity>
+                            ) : (
+                              <TouchableOpacity
+                                style={styles.actionBtn}
+                                onPress={() => handleDeleteSingle(card)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <MaterialIcons name="delete-outline" size={20} color={colors.error} />
+                              </TouchableOpacity>
+                            )}
+                          </View>
                         )}
                       </TouchableOpacity>
                     );
@@ -309,7 +391,15 @@ const styles = StyleSheet.create({
   sourceBadge: { paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.surfaceContainerHigh },
   sourceBadgeText: { color: colors.onSurfaceVariant, fontFamily: 'monospace', fontSize: 10 },
   statText: { color: colors.onSurfaceVariant, fontFamily: 'monospace', fontSize: 10 },
-  deleteBtn: { padding: 4 },
+  actionBtn: { padding: 4 },
+  controlBar: { padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 12 },
+  searchInput: { backgroundColor: colors.surfaceContainerLow, borderWidth: 1, borderColor: colors.surfaceVariant, color: colors.onSurface, padding: 12, fontFamily: 'monospace', fontSize: 13 },
+  controlActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  retiredToggle: { paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.surfaceVariant },
+  retiredToggleActive: { backgroundColor: colors.surfaceVariant },
+  retiredToggleText: { color: colors.onSurfaceVariant, fontFamily: 'SpaceGrotesk_700Bold', fontSize: 10, letterSpacing: 1 },
+  retiredToggleTextActive: { color: colors.onSurface },
+  exportBtn: { padding: 8, borderWidth: 1, borderColor: colors.surfaceVariant, backgroundColor: colors.surfaceContainerLow },
   bulkFooter: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     borderTopWidth: 1, borderTopColor: colors.error,
