@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import type { CardWithProgress, CardMode, Proficiency } from '../types';
 
+export interface AnswerRecord {
+  cardId: number;
+  correct: boolean;
+  question: string;
+  answer: string;
+  options: string | null;
+  mode: CardMode;
+  /** MCQ: the option string the user selected */
+  userChoice?: string;
+}
+
 interface SessionState {
   // Session config
   sessionId: string | null;
@@ -16,12 +27,12 @@ interface SessionState {
   startedAt: number | null;
 
   // Answers tracking
-  answers: { cardId: number; correct: boolean }[];
+  answers: AnswerRecord[];
 
   // Actions
   setSessionConfig: (topicId: number, topicName: string, mode: CardMode, proficiency: Proficiency) => void;
   setQueue: (cards: CardWithProgress[]) => void;
-  answerCard: (correct: boolean) => void;
+  answerCard: (correct: boolean, card: CardWithProgress, userChoice?: string) => void;
   nextCard: () => void;
   resetSession: () => void;
 }
@@ -51,14 +62,23 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setQueue: (cards) =>
     set({ queue: cards, currentIndex: 0, score: 0, answers: [] }),
 
-  answerCard: (correct) => {
+  answerCard: (correct, card, userChoice?) => {
     const state = get();
-    const currentCard = state.queue[state.currentIndex];
-    if (!currentCard) return;
+    if (!card) return;
+
+    const record: AnswerRecord = {
+      cardId: card.id,
+      correct,
+      question: card.question,
+      answer: card.answer,
+      options: card.options,
+      mode: card.mode,
+      userChoice,
+    };
 
     set({
       score: correct ? state.score + 1 : state.score,
-      answers: [...state.answers, { cardId: currentCard.id, correct }],
+      answers: [...state.answers, record],
     });
   },
 

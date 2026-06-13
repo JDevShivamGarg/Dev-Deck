@@ -85,6 +85,7 @@ export default function RootLayout() {
         <Stack.Screen name="session/mcq" options={{ headerShown: false }} />
         <Stack.Screen name="session/flashcard" options={{ headerShown: false }} />
         <Stack.Screen name="session/scenario" options={{ headerShown: false }} />
+        <Stack.Screen name="topic/manage" options={{ headerShown: false }} />
       </Stack>
     </View>
   );

@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
 import { ScenarioCard } from '../../src/components/cards/ScenarioCard';
+import { TimerBar } from '../../src/components/TimerBar';
 import { insertSession } from '../../src/db/queries/sessions';
+import { getUserConfig } from '../../src/db/queries/config';
 import { useSessionStore } from '../../src/store/session';
 import { colors } from '../../src/theme/colors';
+import { useTimer } from '../../src/hooks/useTimer';
 import type { Proficiency } from '../../src/types';
 
 export default function ScenarioSession() {
@@ -17,17 +20,33 @@ export default function ScenarioSession() {
   }>();
   const router = useRouter();
 
+  const [timerMode, setTimerMode] = useState<'timer' | 'stopwatch'>('stopwatch');
+  const [timeLimitSecs, setTimeLimitSecs] = useState(30);
+
+  useEffect(() => {
+    (async () => {
+      const mode = await getUserConfig('timer_mode');
+      if (mode === 'timer' || mode === 'stopwatch') setTimerMode(mode);
+      const limit = await getUserConfig('question_time_limit');
+      if (limit) setTimeLimitSecs(Number(limit));
+    })();
+  }, []);
+
   const {
     loading, error, currentCard, score, totalCards, isComplete, gradeCard, nextCard,
+    sessionElapsed, cardElapsed,
   } = useSession(
-    Number(topicId), topicName ?? '', 'scenario', (proficiency as Proficiency) ?? 'intermediate'
+    Number(topicId), topicName ?? '', 'scenario', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs
   );
+
+  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, score + (isComplete ? 1 : 0));
 
   const store = useSessionStore();
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
       const elapsed = store.startedAt ? Math.round((Date.now() - store.startedAt) / 1000) : 0;
+      const answersJson = JSON.stringify(store.answers);
       insertSession({
         topic_id: Number(topicId),
         mode: 'scenario',
@@ -45,7 +64,8 @@ export default function ScenarioSession() {
             mode: 'scenario', 
             total: totalCards.toString(), 
             correct: score.toString(),
-            elapsed: elapsed.toString()
+            elapsed: elapsed.toString(),
+            answers: answersJson,
           },
         });
       });
@@ -82,6 +102,15 @@ export default function ScenarioSession() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      {/* Timer bar */}
+      <TimerBar
+        sessionElapsed={sessionElapsed}
+        cardElapsed={cardElapsed}
+        cardRemaining={timerMode === 'timer' ? remaining : null}
+        isExpired={isExpired}
+        mode={timerMode}
+        limitSecs={timeLimitSecs}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}

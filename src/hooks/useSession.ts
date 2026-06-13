@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getCardsDue, getCardsDueCount, insertCard, updateCardProgress, getExistingQuestionsForTopic } from '../db/queries/cards';
 import { generateAdditionalCards } from '../ai/generator';
 import { grade } from '../srs/scheduler';
@@ -11,15 +11,42 @@ import Constants from 'expo-constants';
 
 const AI_THRESHOLD = 5;
 
-export function useSession(topicId: number, topicName: string, mode: CardMode, proficiency: Proficiency) {
+export function useSession(
+  topicId: number,
+  topicName: string,
+  mode: CardMode,
+  proficiency: Proficiency,
+  timeLimitSecs?: number
+) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const store = useSessionStore();
   const [cardStartedAt, setCardStartedAt] = useState<number>(Date.now());
+  const [sessionElapsed, setSessionElapsed] = useState(0);
+  const [cardElapsed, setCardElapsed] = useState(0);
+  const cardStartRef = useRef<number>(Date.now());
+  const sessionStartRef = useRef<number | null>(null);
 
   useEffect(() => {
-    setCardStartedAt(Date.now());
+    const now = Date.now();
+    setCardStartedAt(now);
+    cardStartRef.current = now;
+    setCardElapsed(0);
   }, [store.currentIndex]);
+
+  // Live session elapsed
+  useEffect(() => {
+    if (store.startedAt) {
+      sessionStartRef.current = store.startedAt;
+    }
+    const interval = setInterval(() => {
+      if (sessionStartRef.current) {
+        setSessionElapsed(Math.floor((Date.now() - sessionStartRef.current) / 1000));
+      }
+      setCardElapsed(Math.floor((Date.now() - cardStartRef.current) / 1000));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [store.startedAt]);
 
   const loadCards = useCallback(async () => {
     try {
@@ -61,7 +88,7 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
     }
   }, [topicId, topicName, mode, proficiency]);
 
-  const gradeCard = useCallback(async (correct: boolean) => {
+  const gradeCard = useCallback(async (correct: boolean, userChoice?: string) => {
     const currentCard = store.queue[store.currentIndex];
     if (!currentCard) return;
 
@@ -107,7 +134,7 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
       console.error('Failed to update card progress:', err);
     }
 
-    store.answerCard(correct);
+    store.answerCard(correct, currentCard, userChoice);
   }, [store.queue, store.currentIndex, cardStartedAt, topicId, topicName]);
 
   useEffect(() => {
@@ -127,5 +154,8 @@ export function useSession(topicId: number, topicName: string, mode: CardMode, p
     gradeCard,
     nextCard: store.nextCard,
     reload: loadCards,
+    sessionElapsed,
+    cardElapsed,
+    timeLimitSecs,
   };
 }

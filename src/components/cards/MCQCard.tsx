@@ -6,7 +6,7 @@ import type { CardWithProgress } from '../../types';
 
 interface MCQCardProps {
   card: CardWithProgress;
-  onGrade: (correct: boolean) => void;
+  onGrade: (correct: boolean, userChoice: string) => void;
   onNext: () => void;
 }
 
@@ -25,7 +25,7 @@ export function MCQCard({ card, onGrade, onNext }: MCQCardProps) {
   const handleSubmit = () => {
     if (!selectedOption || hasAnswered) return;
     setHasAnswered(true);
-    onGrade(selectedOption === card.answer);
+    onGrade(selectedOption === card.answer, selectedOption);
   };
 
   const handleNext = () => {

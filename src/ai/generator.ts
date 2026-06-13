@@ -1,4 +1,5 @@
 import { buildNewTopicPrompt, buildExistingTopicPrompt } from './prompts';
+import { getUserConfig } from '../db/queries/config';
 import type { RawCard } from '../types';
 
 export interface BatchGenerationResult {
@@ -11,7 +12,8 @@ export async function generateNewTopic(
   material: string,
   apiKey: string
 ): Promise<BatchGenerationResult> {
-  const prompt = buildNewTopicPrompt(topicName, material);
+  const customTemplate = await getUserConfig('prompt_new_topic').catch(() => null);
+  const prompt = buildNewTopicPrompt(topicName, material, customTemplate);
   return await executeBatchGeneration(prompt, apiKey);
 }
 
@@ -20,7 +22,8 @@ export async function generateAdditionalCards(
   existingQuestions: string[],
   apiKey: string
 ): Promise<BatchGenerationResult> {
-  const prompt = buildExistingTopicPrompt(topicName, existingQuestions);
+  const customTemplate = await getUserConfig('prompt_existing_topic').catch(() => null);
+  const prompt = buildExistingTopicPrompt(topicName, existingQuestions, undefined, customTemplate);
   return await executeBatchGeneration(prompt, apiKey);
 }
 

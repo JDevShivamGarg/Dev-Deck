@@ -189,3 +189,44 @@ export async function getExistingQuestionsForTopic(topicId: number): Promise<str
     throw error;
   }
 }
+
+export async function getCardsByTopic(topicId: number): Promise<CardWithProgress[]> {
+  const db = await getDatabase();
+  try {
+    return db.getAllAsync<CardWithProgress>(
+      `SELECT c.*, cp.interval_days, cp.ease_factor, cp.consecutive_correct,
+              cp.times_seen, cp.times_correct, cp.next_due, cp.retired,
+              cp.last_response_time_ms, cp.incorrect_streak
+       FROM Card c
+       LEFT JOIN CardProgress cp ON cp.card_id = c.id
+       WHERE c.topic_id = ?
+       ORDER BY c.mode ASC, c.difficulty ASC`, topicId);
+  } catch (error) {
+    console.error('Database Error in getCardsByTopic:', error);
+    throw error;
+  }
+}
+
+export async function deleteCard(cardId: number): Promise<void> {
+  const db = await getDatabase();
+  try {
+    await db.runAsync(`DELETE FROM CardProgress WHERE card_id = ?`, cardId);
+    await db.runAsync(`DELETE FROM Card WHERE id = ?`, cardId);
+  } catch (error) {
+    console.error('Database Error in deleteCard:', error);
+    throw error;
+  }
+}
+
+export async function bulkDeleteCards(cardIds: number[]): Promise<void> {
+  if (cardIds.length === 0) return;
+  const db = await getDatabase();
+  try {
+    const placeholders = cardIds.map(() => '?').join(', ');
+    await db.runAsync(`DELETE FROM CardProgress WHERE card_id IN (${placeholders})`, ...cardIds);
+    await db.runAsync(`DELETE FROM Card WHERE id IN (${placeholders})`, ...cardIds);
+  } catch (error) {
+    console.error('Database Error in bulkDeleteCards:', error);
+    throw error;
+  }
+}

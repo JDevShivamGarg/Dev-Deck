@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../../src/hooks/useSession';
 import { MCQCard } from '../../src/components/cards/MCQCard';
+import { TimerBar } from '../../src/components/TimerBar';
 import { insertSession } from '../../src/db/queries/sessions';
+import { getUserConfig } from '../../src/db/queries/config';
 import { useSessionStore } from '../../src/store/session';
 import { colors } from '../../src/theme/colors';
+import { useTimer } from '../../src/hooks/useTimer';
 import type { Proficiency } from '../../src/types';
 
 export default function MCQSession() {
@@ -17,17 +20,37 @@ export default function MCQSession() {
   }>();
   const router = useRouter();
 
+  const [timerMode, setTimerMode] = useState<'timer' | 'stopwatch'>('stopwatch');
+  const [timeLimitSecs, setTimeLimitSecs] = useState(30);
+
+  useEffect(() => {
+    (async () => {
+      const mode = await getUserConfig('timer_mode');
+      if (mode === 'timer' || mode === 'stopwatch') setTimerMode(mode);
+      const limit = await getUserConfig('question_time_limit');
+      if (limit) setTimeLimitSecs(Number(limit));
+    })();
+  }, []);
+
   const {
     loading, error, currentCard, currentIndex, score, totalCards, isComplete, gradeCard, nextCard,
+    sessionElapsed, cardElapsed,
   } = useSession(
-    Number(topicId), topicName ?? '', 'mcq', (proficiency as Proficiency) ?? 'intermediate'
+    Number(topicId), topicName ?? '', 'mcq', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs
   );
 
+  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, currentIndex);
+
   const store = useSessionStore();
+
+  const handleGrade = useCallback((correct: boolean, userChoice: string) => {
+    gradeCard(correct, userChoice);
+  }, [gradeCard]);
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
       const elapsed = store.startedAt ? Math.round((Date.now() - store.startedAt) / 1000) : 0;
+      const answersJson = JSON.stringify(store.answers);
       insertSession({
         topic_id: Number(topicId),
         mode: 'mcq',
@@ -45,7 +68,8 @@ export default function MCQSession() {
             mode: 'mcq', 
             total: totalCards.toString(), 
             correct: score.toString(),
-            elapsed: elapsed.toString()
+            elapsed: elapsed.toString(),
+            answers: answersJson,
           },
         });
       });
@@ -82,6 +106,15 @@ export default function MCQSession() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      {/* Timer bar */}
+      <TimerBar
+        sessionElapsed={sessionElapsed}
+        cardElapsed={cardElapsed}
+        cardRemaining={timerMode === 'timer' ? remaining : null}
+        isExpired={isExpired}
+        mode={timerMode}
+        limitSecs={timeLimitSecs}
+      />
       {/* Progress */}
       <View style={styles.progressRow}>
         <Text style={styles.progressLabel}>Q.{String(currentIndex + 1).padStart(2, '0')}</Text>
@@ -90,7 +123,7 @@ export default function MCQSession() {
         </View>
         <Text style={styles.progressLabel}>{totalCards}</Text>
       </View>
-      <MCQCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
+      <MCQCard card={currentCard} onGrade={handleGrade} onNext={nextCard} />
     </SafeAreaView>
   );
 }

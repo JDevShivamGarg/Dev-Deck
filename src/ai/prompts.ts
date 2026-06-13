@@ -7,14 +7,12 @@ function sanitizeMaterial(material?: string): string {
   return material;
 }
 
-export function buildNewTopicPrompt(
-  topicName: string,
-  material: string
-): string {
-  const sanitized = sanitizeMaterial(material);
-  return `Case 1 — New Topic
-Topic: ${topicName}
-Material: ${sanitized || 'Generate practical, real-world content relevant to this technology.'}
+// ─── Default prompt templates ──────────────────────────────────────────────
+// Exported so the settings screen can display and reset them.
+
+export const DEFAULT_NEW_TOPIC_PROMPT = `Case 1 — New Topic
+Topic: {{topic}}
+Material: {{material}}
 
 Generate study content from the material above. Return only valid JSON, no explanation:
 
@@ -45,26 +43,13 @@ You must provide EXACTLY:
 - 10 Flashcards (Include a mix of difficulty 1, 3, and 5)
 - 10 Q&A scenarios (Include a mix of difficulty 1, 3, and 5)
 Make sure every single format type contains questions from all three difficulty levels.`;
-}
 
-export function buildExistingTopicPrompt(
-  topicName: string,
-  existingQuestions: string[],
-  material?: string
-): string {
-  const sanitized = sanitizeMaterial(material);
-  const existingList = existingQuestions.length > 0 
-    ? existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')
-    : 'None';
-
-  const materialContext = sanitized ? `\nMaterial to draw from:\n${sanitized}\n` : '';
-
-  return `Case 2 — New Questions for Existing Topic
-Topic: ${topicName}
-${materialContext}
+export const DEFAULT_EXISTING_TOPIC_PROMPT = `Case 2 — New Questions for Existing Topic
+Topic: {{topic}}
+{{material}}
 
 These questions already exist — do not regenerate or rephrase them:
-${existingList}
+{{existingQuestions}}
 
 Generate additional questions covering different concepts or angles not addressed above. Return only valid JSON, no explanation:
 
@@ -94,4 +79,54 @@ You must provide EXACTLY:
 - 5 Flashcards (Include a mix of difficulty 1, 3, and 5)
 - 5 Q&A scenarios (Include a mix of difficulty 1, 3, and 5)
 Make sure every single format type contains questions from all three difficulty levels.`;
+
+/**
+ * The "self-generation" prompt is the template users copy into ChatGPT.
+ * It uses the same placeholders as the Groq new-topic prompt.
+ */
+export const DEFAULT_SELF_GEN_PROMPT = DEFAULT_NEW_TOPIC_PROMPT;
+
+// ─── Prompt builders ───────────────────────────────────────────────────────
+
+function applyTemplate(
+  template: string,
+  vars: Record<string, string>
+): string {
+  return Object.entries(vars).reduce(
+    (acc, [key, val]) => acc.replaceAll(`{{${key}}}`, val),
+    template
+  );
+}
+
+export function buildNewTopicPrompt(
+  topicName: string,
+  material: string,
+  customTemplate?: string | null
+): string {
+  const sanitized = sanitizeMaterial(material);
+  const template = customTemplate ?? DEFAULT_NEW_TOPIC_PROMPT;
+  return applyTemplate(template, {
+    topic: topicName,
+    material: sanitized || 'Generate practical, real-world content relevant to this technology.',
+  });
+}
+
+export function buildExistingTopicPrompt(
+  topicName: string,
+  existingQuestions: string[],
+  material?: string,
+  customTemplate?: string | null
+): string {
+  const sanitized = sanitizeMaterial(material);
+  const existingList =
+    existingQuestions.length > 0
+      ? existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')
+      : 'None';
+  const materialContext = sanitized ? `\nMaterial to draw from:\n${sanitized}\n` : '';
+  const template = customTemplate ?? DEFAULT_EXISTING_TOPIC_PROMPT;
+  return applyTemplate(template, {
+    topic: topicName,
+    material: materialContext,
+    existingQuestions: existingList,
+  });
 }
