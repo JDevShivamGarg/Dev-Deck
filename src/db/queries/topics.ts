@@ -59,9 +59,29 @@ export async function insertCustomTopic(
 ): Promise<number> {
   const db = await getDatabase();
   try {
+    const existing = await db.getFirstAsync<{ id: number }>(
+      `SELECT id FROM Topic WHERE slug = ?`, slug
+    );
+    if (existing) {
+      if (material) {
+        await db.runAsync(
+          `UPDATE Topic SET material = ?, display_name = ? WHERE id = ?`,
+          material, display, existing.id
+        );
+      }
+      return existing.id;
+    }
+
     const result = await db.runAsync(
       `INSERT OR IGNORE INTO Topic (slug, display_name, icon, source, material, created_at)
        VALUES (?, ?, ?, 'custom', ?, ?)`, slug, display, icon, material, Date.now());
+
+    if (result.lastInsertRowId === 0) {
+      const fallback = await db.getFirstAsync<{ id: number }>(
+        `SELECT id FROM Topic WHERE slug = ?`, slug
+      );
+      return fallback?.id ?? 0;
+    }
     return result.lastInsertRowId;
   } catch (error) {
     console.error('Database Error in insertCustomTopic:', error);
@@ -75,6 +95,28 @@ export async function toggleTopicActive(topicId: number, active: 0 | 1): Promise
     await db.runAsync(`UPDATE Topic SET active = ? WHERE id = ?`, active, topicId);
   } catch (error) {
     console.error('Database Error in toggleTopicActive:', error);
+    throw error;
+  }
+}
+
+export async function deleteTopic(topicId: number): Promise<void> {
+  const db = await getDatabase();
+  try {
+    // 1. Delete CardProgress for all cards in this topic
+    await db.runAsync(
+      `DELETE FROM CardProgress WHERE card_id IN (SELECT id FROM Card WHERE topic_id = ?)`,
+      topicId
+    );
+    // 2. Delete Cards in this topic
+    await db.runAsync(`DELETE FROM Card WHERE topic_id = ?`, topicId);
+    // 3. Delete UserTopicConfig for this topic
+    await db.runAsync(`DELETE FROM UserTopicConfig WHERE topic_id = ?`, topicId);
+    // 4. Delete Session records for this topic
+    await db.runAsync(`DELETE FROM Session WHERE topic_id = ?`, topicId);
+    // 5. Delete Topic itself
+    await db.runAsync(`DELETE FROM Topic WHERE id = ?`, topicId);
+  } catch (error) {
+    console.error('Database Error in deleteTopic:', error);
     throw error;
   }
 }

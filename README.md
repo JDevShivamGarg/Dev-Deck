@@ -17,8 +17,8 @@ Built entirely offline-first using React Native, Expo, and local SQLite persiste
 
 * **Offline-First Architecture**: All cards, progress metrics, and scheduling algorithms are processed locally via Expo SQLite. Zero reliance on continuous cloud syncing.
 * **Intelligent Spaced Repetition (SRS)**: Employs a finely-tuned spaced repetition algorithm to optimize memory retention, adjusting review intervals dynamically based on your historical performance.
-* **Comprehensive Progress Tracking**: Keep yourself accountable with customizable daily goals, streak tracking, and a detailed session history tab.
-* **Advanced Card Management**: Search through your decks, export cards to JSON via clipboard, manually adjust card difficulties post-session, and retire/unretire cards you've mastered. 
+* **Comprehensive Progress Tracking**: Keep yourself accountable with customizable daily goals, streak tracking, and a detailed session history tab (with Today, 7-day, and 30-day filters).
+* **Advanced Card Management**: Search through your decks, delete custom topics (with cascades), delete individual/bulk cards, export cards to JSON via clipboard, manually adjust card difficulties post-session, and retire/unretire cards you've mastered.
 * **Hybrid AI Content Generation**: 
   * **Automatic Generation**: Connect your Groq API key to generate entire decks (MCQs, Flashcards, Scenario-based Questions) on-the-fly using a customizable unified prompt.
   * **Bring Your Own LLM (BYO-LLM)**: Prefer ChatGPT or Claude? Copy the perfectly structured, pre-generated system prompt directly to your clipboard, paste the JSON response back into the app, and instantly inject custom topics.

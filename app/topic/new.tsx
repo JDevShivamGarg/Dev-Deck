@@ -22,8 +22,9 @@ export default function NewTopicScreen() {
   const [manualJson, setManualJson] = useState('');
 
   const saveToDb = async (topicResult: string, cards: any[]) => {
-    const slug = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const topicId = await insertCustomTopic(slug, topicResult || topicName, '📌', material);
+    const resolvedName = topicResult || topicName || 'Untitled Topic';
+    const slug = resolvedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const topicId = await insertCustomTopic(slug, resolvedName, '📌', material);
 
     for (const card of cards) {
       await insertCard(topicId, card._mappedMode as any, card, 'ai');
@@ -39,8 +40,8 @@ export default function NewTopicScreen() {
     let apiKey = await getUserConfig('groq_api_key');
     if (!apiKey) {
       apiKey = Constants.expoConfig?.extra?.groqApiKey 
-        ?? process.env.EXPO_PUBLIC_GROQ_API_KEY 
-        ?? '';
+      ?? process.env.EXPO_PUBLIC_GROQ_API_KEY 
+      ?? '';
     }
 
     if (!apiKey) {
@@ -83,10 +84,6 @@ export default function NewTopicScreen() {
   };
 
   const handleImportJson = async () => {
-    if (!topicName.trim()) {
-      Alert.alert('Missing Info', 'Please provide a topic name.');
-      return;
-    }
     if (!manualJson.trim()) {
       Alert.alert('Missing Info', 'Please paste the JSON response from your LLM.');
       return;
@@ -95,12 +92,18 @@ export default function NewTopicScreen() {
     try {
       const result = parseGeneratedCardsJSON(manualJson);
       
+      const resolvedTopicName = result.topic?.trim() || topicName.trim();
+      if (!resolvedTopicName) {
+        Alert.alert('Missing Info', 'Please provide a topic name.');
+        return;
+      }
+
       if (result.cards.length === 0) {
         Alert.alert('Import Failed', 'No valid cards found in the provided JSON.');
         return;
       }
 
-      await saveToDb(result.topic || topicName, result.cards);
+      await saveToDb(resolvedTopicName, result.cards);
 
       Alert.alert('Success', `Imported ${result.cards.length} cards manually.`, [
         { text: 'OK', onPress: () => router.back() }

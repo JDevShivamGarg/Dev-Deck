@@ -74,7 +74,21 @@ export function parseGeneratedCardsJSON(content: string): BatchGenerationResult 
       throw new Error('No JSON object found in response');
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    // Clean JSON string of comments, trailing commas, and smart quotes
+    let cleanedJson = jsonMatch[0]
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'");
+
+    // Remove block comments
+    cleanedJson = cleanedJson.replace(/\/\*[\s\S]*?\*\//g, '');
+    
+    // Remove single line comments (but not inside double quoted strings)
+    cleanedJson = cleanedJson.replace(/\/\/(?=(?:[^"]*"[^"]*")*[^"]*$)[^\n]*/gm, '');
+
+    // Remove trailing commas before closing brackets/braces
+    cleanedJson = cleanedJson.replace(/,\s*([\]}])/g, '$1');
+
+    const parsed = JSON.parse(cleanedJson);
     const cards: (RawCard & { _mappedMode: string })[] = [];
 
     // Parse MCQs
@@ -86,7 +100,7 @@ export function parseGeneratedCardsJSON(content: string): BatchGenerationResult 
             options: mcq.options,
             answer: mcq.answer,
             difficulty: mcq.difficulty || 3,
-            explanation: 'Generated from material', // Fallback
+            explanation: mcq.explanation || 'Generated from material',
             _mappedMode: 'mcq'
           } as RawCard & { _mappedMode: string });
         }
@@ -101,7 +115,7 @@ export function parseGeneratedCardsJSON(content: string): BatchGenerationResult 
             question: fc.front,
             answer: fc.back,
             difficulty: fc.difficulty || 3,
-            explanation: 'Generated from material',
+            explanation: fc.explanation || 'Generated from material',
             _mappedMode: 'flashcard'
           } as RawCard & { _mappedMode: string });
         }

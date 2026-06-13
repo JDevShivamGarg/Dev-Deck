@@ -7,7 +7,7 @@ import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { getAllTopics, insertCustomTopic, toggleTopicActive } from '../../src/db/queries/topics';
+import { getAllTopics, insertCustomTopic, toggleTopicActive, deleteTopic } from '../../src/db/queries/topics';
 import { getUserConfig, setUserConfig } from '../../src/db/queries/config';
 import { DEFAULT_GENERATION_PROMPT, DEFAULT_SELF_GEN_PROMPT } from '../../src/ai/prompts';
 import { colors } from '../../src/theme/colors';
@@ -97,6 +97,24 @@ export default function SettingsScreen() {
   const handleToggleTopic = async (topicId: number, currentActive: number) => {
     await toggleTopicActive(topicId, currentActive === 1 ? 0 : 1);
     loadData();
+  };
+
+  const handleDeleteTopic = (topicId: number, displayName: string) => {
+    Alert.alert(
+      'Delete Topic',
+      `Permanently delete "${displayName}" and all its study cards? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteTopic(topicId);
+            loadData();
+          },
+        },
+      ]
+    );
   };
 
   // Timer
@@ -397,6 +415,13 @@ export default function SettingsScreen() {
                           activeOpacity={0.8}
                         >
                           <View style={[styles.toggleThumb, isActive && styles.toggleThumbActive]} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{ padding: 4 }}
+                          onPress={() => handleDeleteTopic(t.id, t.display_name)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <MaterialIcons name="delete-outline" size={20} color={colors.error} />
                         </TouchableOpacity>
                       </View>
                     </View>

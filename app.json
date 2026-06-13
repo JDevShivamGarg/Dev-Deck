@@ -2,7 +2,7 @@
   "expo": {
     "name": "DevDeck",
     "slug": "devdeck",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -19,7 +19,8 @@
         "backgroundColor": "#050505"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.devdeck.app"
+      "package": "com.devdeck.app",
+      "versionCode": 2
     },
     "plugins": [
       "expo-router",
@@ -35,6 +36,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.devdeck.app",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
