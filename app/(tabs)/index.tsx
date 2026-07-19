@@ -11,6 +11,8 @@ import { TOPIC_ICON_MAP } from '../../src/data/topics';
 import { colors } from '../../src/theme/colors';
 import type { Topic } from '../../src/types';
 
+import { InteractiveGuide } from '../../src/components/InteractiveGuide';
+
 interface TopicWithDue extends Topic {
   dueCount: number;
   progress: number; // 0-1
@@ -22,6 +24,7 @@ export default function HomeScreen() {
   const [streak, setStreak] = useState(0);
   const [dailyProgress, setDailyProgress] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(30);
+  const [guideVisible, setGuideVisible] = useState(false);
   const router = useRouter();
 
   const handleStartSession = () => {
@@ -102,16 +105,20 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      <InteractiveGuide visible={guideVisible} onClose={() => setGuideVisible(false)} />
       {/* Header bar */}
       <View style={styles.appBar}>
         <MaterialCommunityIcons name="console-line" size={22} color={colors.neon} />
         <Text style={styles.appBarTitle}>DEVDECK</Text>
-        <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
           <View style={styles.streakBadge}>
             <MaterialCommunityIcons name="fire" size={16} color={streak > 0 ? '#FFA500' : colors.surfaceVariant} />
             <Text style={styles.streakText}>{streak}</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/topic/new')}>
+          <TouchableOpacity onPress={() => setGuideVisible(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <MaterialCommunityIcons name="help-circle-outline" size={22} color={colors.neon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/topic/new')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <MaterialCommunityIcons name="plus" size={24} color={colors.neon} />
           </TouchableOpacity>
         </View>

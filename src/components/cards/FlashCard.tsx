@@ -9,9 +9,10 @@ interface FlashCardProps {
   card: CardWithProgress;
   onGrade: (correct: boolean) => void;
   onNext: () => void;
+  onFlip?: () => void;
 }
 
-export function FlashCard({ card, onGrade, onNext }: FlashCardProps) {
+export function FlashCard({ card, onGrade, onNext, onFlip }: FlashCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
   const rotation = useSharedValue(0);
@@ -29,6 +30,7 @@ export function FlashCard({ card, onGrade, onNext }: FlashCardProps) {
   const handleFlip = () => {
     if (isFlipped) return;
     setIsFlipped(true);
+    onFlip?.();
     rotation.value = withTiming(1, { duration: 500 });
   };
 

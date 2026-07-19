@@ -13,6 +13,8 @@ import { DEFAULT_GENERATION_PROMPT, DEFAULT_SELF_GEN_PROMPT } from '../../src/ai
 import { colors } from '../../src/theme/colors';
 import type { Topic, Proficiency } from '../../src/types';
 
+import { InteractiveGuide } from '../../src/components/InteractiveGuide';
+
 const PROFICIENCY_LEVELS: Proficiency[] = ['beginner', 'intermediate', 'advanced'];
 
 export default function SettingsScreen() {
@@ -22,6 +24,7 @@ export default function SettingsScreen() {
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [defaultProficiency, setDefaultProficiency] = useState<Proficiency>('intermediate');
   const [customTopicInput, setCustomTopicInput] = useState('');
+  const [guideVisible, setGuideVisible] = useState(false);
 
   // Timer state
   const [timerMode, setTimerMode] = useState<'stopwatch' | 'timer'>('stopwatch');
@@ -208,6 +211,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      <InteractiveGuide visible={guideVisible} onClose={() => setGuideVisible(false)} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -224,6 +228,22 @@ export default function SettingsScreen() {
           <View style={styles.headerBlock}>
             <Text style={styles.headerTitle}>SYSTEM CONFIG</Text>
             <Text style={styles.headerSub}>Manage content streams and integration parameters.</Text>
+          </View>
+
+          {/* Help Guide Entry */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.neonDot} />
+              <Text style={styles.sectionLabel}>GETTING STARTED & HELP</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.copyBtn}
+              onPress={() => setGuideVisible(true)}
+              activeOpacity={0.85}
+            >
+              <MaterialCommunityIcons name="compass-outline" size={18} color={colors.dark} />
+              <Text style={styles.copyBtnText}>LAUNCH INTERACTIVE GUIDE</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Proficiency */}

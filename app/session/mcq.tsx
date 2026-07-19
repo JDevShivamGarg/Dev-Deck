@@ -23,6 +23,7 @@ export default function MCQSession() {
 
   const [timerMode, setTimerMode] = useState<'timer' | 'stopwatch'>('stopwatch');
   const [timeLimitSecs, setTimeLimitSecs] = useState(30);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -37,10 +38,10 @@ export default function MCQSession() {
     loading, error, currentCard, currentIndex, score, totalCards, isComplete, gradeCard, nextCard,
     sessionElapsed, cardElapsed,
   } = useSession(
-    Number(topicId), topicName ?? '', 'mcq', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs
+    Number(topicId), topicName ?? '', 'mcq', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs, isAnswerRevealed
   );
 
-  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, currentIndex);
+  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, currentIndex, isAnswerRevealed);
 
   const store = useSessionStore();
   const navigation = useNavigation();
@@ -62,8 +63,14 @@ export default function MCQSession() {
   }, [navigation, isComplete]);
 
   const handleGrade = useCallback((correct: boolean, userChoice: string) => {
+    setIsAnswerRevealed(true);
     gradeCard(correct, userChoice);
   }, [gradeCard]);
+
+  const handleNextCard = useCallback(() => {
+    setIsAnswerRevealed(false);
+    nextCard();
+  }, [nextCard]);
 
   useEffect(() => {
     if (isComplete && totalCards > 0) {
@@ -142,7 +149,7 @@ export default function MCQSession() {
         </View>
         <Text style={styles.progressLabel}>{totalCards}</Text>
       </View>
-      <MCQCard card={currentCard} onGrade={handleGrade} onNext={nextCard} />
+      <MCQCard card={currentCard} onGrade={handleGrade} onNext={handleNextCard} />
     </SafeAreaView>
   );
 }

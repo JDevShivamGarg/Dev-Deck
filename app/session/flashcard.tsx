@@ -23,6 +23,7 @@ export default function FlashcardSession() {
 
   const [timerMode, setTimerMode] = useState<'timer' | 'stopwatch'>('stopwatch');
   const [timeLimitSecs, setTimeLimitSecs] = useState(30);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -37,10 +38,15 @@ export default function FlashcardSession() {
     loading, error, currentCard, currentIndex, score, totalCards, isComplete, gradeCard, nextCard,
     sessionElapsed, cardElapsed,
   } = useSession(
-    Number(topicId), topicName ?? '', 'flashcard', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs
+    Number(topicId), topicName ?? '', 'flashcard', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs, isAnswerRevealed
   );
 
-  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, currentIndex);
+  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, currentIndex, isAnswerRevealed);
+
+  const handleNextCard = () => {
+    setIsAnswerRevealed(false);
+    nextCard();
+  };
 
   const store = useSessionStore();
   const navigation = useNavigation();
@@ -134,7 +140,7 @@ export default function FlashcardSession() {
       <View style={styles.counterRow}>
         <Text style={styles.counterText}>[ {currentIndex + 1} / {totalCards} ]</Text>
       </View>
-      <FlashCard card={currentCard} onGrade={gradeCard} onNext={nextCard} />
+      <FlashCard card={currentCard} onGrade={gradeCard} onNext={handleNextCard} onFlip={() => setIsAnswerRevealed(true)} />
     </SafeAreaView>
   );
 }

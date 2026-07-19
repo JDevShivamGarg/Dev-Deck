@@ -10,11 +10,17 @@ interface ScenarioCardProps {
   onGrade: (correct: boolean) => void;
   onNext: () => void;
   topicSlug?: string;
+  onReveal?: () => void;
 }
 
-export function ScenarioCard({ card, onGrade, onNext, topicSlug }: ScenarioCardProps) {
+export function ScenarioCard({ card, onGrade, onNext, topicSlug, onReveal }: ScenarioCardProps) {
   const [showAnswer, setShowAnswer] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
+
+  const handleReveal = () => {
+    setShowAnswer(true);
+    onReveal?.();
+  };
 
   const handleGrade = (correct: boolean) => {
     setHasAnswered(true);
@@ -59,13 +65,13 @@ export function ScenarioCard({ card, onGrade, onNext, topicSlug }: ScenarioCardP
         <TerminalSandbox
           cardAnswer={card.answer}
           cardQuestion={card.question}
-          onSuccess={() => setShowAnswer(true)}
+          onSuccess={handleReveal}
         />
       )}
 
       {/* Reveal button */}
       {!showAnswer && (
-        <TouchableOpacity onPress={() => setShowAnswer(true)} style={styles.revealBtn} activeOpacity={0.85}>
+        <TouchableOpacity onPress={handleReveal} style={styles.revealBtn} activeOpacity={0.85}>
           <MaterialIcons name="visibility" size={18} color={colors.dark} />
           <Text style={styles.revealBtnText}>{topicSlug === 'git' ? 'BYPASS & REVEAL ANALYSIS' : 'REVEAL ANALYSIS'}</Text>
         </TouchableOpacity>

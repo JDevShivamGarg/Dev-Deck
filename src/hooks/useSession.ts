@@ -16,7 +16,8 @@ export function useSession(
   topicName: string,
   mode: CardMode,
   proficiency: Proficiency,
-  timeLimitSecs?: number
+  timeLimitSecs?: number,
+  isCardPaused: boolean = false
 ) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,16 +26,34 @@ export function useSession(
   const [sessionElapsed, setSessionElapsed] = useState(0);
   const [cardElapsed, setCardElapsed] = useState(0);
   const cardStartRef = useRef<number>(Date.now());
+  const cardPausedMsRef = useRef<number>(0);
+  const cardPauseStartRef = useRef<number | null>(null);
   const sessionStartRef = useRef<number | null>(null);
 
   useEffect(() => {
     const now = Date.now();
     setCardStartedAt(now);
     cardStartRef.current = now;
+    cardPausedMsRef.current = 0;
+    cardPauseStartRef.current = null;
     setCardElapsed(0);
   }, [store.currentIndex]);
 
-  // Live session elapsed
+  // Handle card pause transitions
+  useEffect(() => {
+    if (isCardPaused) {
+      if (!cardPauseStartRef.current) {
+        cardPauseStartRef.current = Date.now();
+      }
+    } else {
+      if (cardPauseStartRef.current) {
+        cardPausedMsRef.current += (Date.now() - cardPauseStartRef.current);
+        cardPauseStartRef.current = null;
+      }
+    }
+  }, [isCardPaused]);
+
+  // Live session and card elapsed
   useEffect(() => {
     if (store.startedAt) {
       sessionStartRef.current = store.startedAt;
@@ -43,10 +62,13 @@ export function useSession(
       if (sessionStartRef.current) {
         setSessionElapsed(Math.floor((Date.now() - sessionStartRef.current) / 1000));
       }
-      setCardElapsed(Math.floor((Date.now() - cardStartRef.current) / 1000));
+      if (!isCardPaused) {
+        const activeCardMs = Date.now() - cardStartRef.current - cardPausedMsRef.current;
+        setCardElapsed(Math.max(0, Math.floor(activeCardMs / 1000)));
+      }
     }, 500);
     return () => clearInterval(interval);
-  }, [store.startedAt]);
+  }, [store.startedAt, isCardPaused]);
 
   const loadCards = useCallback(async () => {
     try {

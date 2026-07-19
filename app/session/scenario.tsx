@@ -24,6 +24,7 @@ export default function ScenarioSession() {
 
   const [timerMode, setTimerMode] = useState<'timer' | 'stopwatch'>('stopwatch');
   const [timeLimitSecs, setTimeLimitSecs] = useState(30);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -35,13 +36,18 @@ export default function ScenarioSession() {
   }, []);
 
   const {
-    loading, error, currentCard, score, totalCards, isComplete, gradeCard, nextCard,
+    loading, error, currentCard, currentIndex, score, totalCards, isComplete, gradeCard, nextCard,
     sessionElapsed, cardElapsed,
   } = useSession(
-    Number(topicId), topicName ?? '', 'scenario', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs
+    Number(topicId), topicName ?? '', 'scenario', (proficiency as Proficiency) ?? 'intermediate', timeLimitSecs, isAnswerRevealed
   );
 
-  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, score + (isComplete ? 1 : 0));
+  const { remaining, isExpired } = useTimer(timerMode, timeLimitSecs, currentIndex, isAnswerRevealed);
+
+  const handleNextCard = () => {
+    setIsAnswerRevealed(false);
+    nextCard();
+  };
 
   const store = useSessionStore();
   const navigation = useNavigation();
@@ -135,7 +141,7 @@ export default function ScenarioSession() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={nextCard} topicSlug={slug} />
+        <ScenarioCard card={currentCard} onGrade={gradeCard} onNext={handleNextCard} topicSlug={slug} onReveal={() => setIsAnswerRevealed(true)} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
